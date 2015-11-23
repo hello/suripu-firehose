@@ -1,0 +1,15 @@
+.idea
+target
+atlassian-ide-plugin.xml
+^logs
+*.iml
+*.ipr
+#Eclipse-specific
+.settings/
+.classpath
+.project
+.DS_Store
+*.dev.yml
+.*.swp
+*.releaseBackup
+*.pyc
