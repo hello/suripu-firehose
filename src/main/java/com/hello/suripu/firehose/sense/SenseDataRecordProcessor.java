@@ -53,14 +53,16 @@ public class SenseDataRecordProcessor implements IRecordProcessor {
     private final Meter capacity;
 
 
-    public SenseDataRecordProcessor(final MergedUserInfoDynamoDB mergedInfoDynamoDB, final DeviceDataIngestDAO deviceDataDAO, final Integer maxRecords) {
+    public SenseDataRecordProcessor(final MergedUserInfoDynamoDB mergedInfoDynamoDB,
+                                    final DeviceDataIngestDAO deviceDataDAO,
+                                    final Integer maxRecords,
+                                    final MetricRegistry metrics) {
         this.mergedInfoDynamoDB = mergedInfoDynamoDB;
         this.deviceDataDAO = deviceDataDAO;
         this.maxRecords = maxRecords;
 
         ObjectGraphRoot.getInstance().inject(this);
 
-        final MetricRegistry metrics = new MetricRegistry();
         final Class klass = deviceDataDAO.name();
         this.messagesProcessed = metrics.meter(MetricRegistry.name(klass, "messages", "messages-processed"));
         this.batchSaved = metrics.meter(MetricRegistry.name(klass, "batch", "batch-saved"));
