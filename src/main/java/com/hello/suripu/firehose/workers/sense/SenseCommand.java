@@ -23,6 +23,7 @@ import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.coredw8.clients.AmazonDynamoDBClientFactory;
+import com.hello.suripu.firehose.framework.WorkerConfiguration;
 import io.dropwizard.cli.ConfiguredCommand;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
@@ -39,7 +40,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by jakepiccolo on 11/30/15.
  */
-public class SenseCommand extends ConfiguredCommand<SenseConfiguration> {
+public class SenseCommand extends ConfiguredCommand<WorkerConfiguration> {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(SenseCommand.class);
 
@@ -47,7 +48,7 @@ public class SenseCommand extends ConfiguredCommand<SenseConfiguration> {
         super(name, description);
     }
 
-    private void setupGraphite(final Environment environment, final SenseConfiguration configuration) {
+    private void setupGraphite(final Environment environment, final WorkerConfiguration configuration) {
         final String graphiteHostName = configuration.getGraphite().getHost();
         final String apiKey = configuration.getGraphite().getApiKey();
         final Integer interval = configuration.getGraphite().getReportingIntervalInSeconds();
@@ -76,7 +77,7 @@ public class SenseCommand extends ConfiguredCommand<SenseConfiguration> {
         graphiteReporter.start(interval, TimeUnit.SECONDS);
     }
 
-    private KinesisClientLibConfiguration getKclConfig(final SenseConfiguration configuration, final AWSCredentialsProvider provider) throws UnknownHostException {
+    private KinesisClientLibConfiguration getKclConfig(final WorkerConfiguration configuration, final AWSCredentialsProvider provider) throws UnknownHostException {
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 
         LOGGER.debug("{}", queueNames);
@@ -102,7 +103,7 @@ public class SenseCommand extends ConfiguredCommand<SenseConfiguration> {
         return kinesisConfig;
     }
 
-    private void setupRolloutModule(final AmazonDynamoDBClientFactory amazonDynamoDBClientFactory, final SenseConfiguration configuration) {
+    private void setupRolloutModule(final AmazonDynamoDBClientFactory amazonDynamoDBClientFactory, final WorkerConfiguration configuration) {
         final AmazonDynamoDB featureDynamoDB = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.FEATURES);
         final String featureNamespace = (configuration.getDebug()) ? "dev" : "prod";
         final FeatureStore featureStore = new FeatureStore(
@@ -114,7 +115,7 @@ public class SenseCommand extends ConfiguredCommand<SenseConfiguration> {
     }
 
     @Override
-    public void run(Bootstrap<SenseConfiguration> bootstrap, Namespace namespace, SenseConfiguration configuration) throws Exception {
+    public void run(Bootstrap<WorkerConfiguration> bootstrap, Namespace namespace, WorkerConfiguration configuration) throws Exception {
         final Environment environment = new Environment(bootstrap.getApplication().getName(),
                 bootstrap.getObjectMapper(),
                 bootstrap.getValidatorFactory().getValidator(),

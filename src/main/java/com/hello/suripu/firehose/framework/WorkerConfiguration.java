@@ -1,4 +1,4 @@
-package com.hello.suripu.firehose.workers.sense;
+package com.hello.suripu.firehose.framework;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
@@ -6,7 +6,6 @@ import com.hello.suripu.core.configuration.KinesisConfiguration;
 import com.hello.suripu.core.configuration.NewDynamoDBConfiguration;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.coredw8.configuration.GraphiteConfiguration;
-import com.hello.suripu.firehose.framework.FirehoseConfiguration;
 import io.dropwizard.Configuration;
 
 import javax.validation.Valid;
@@ -16,7 +15,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by jakepiccolo on 11/30/15.
  */
-public class SenseConfiguration extends Configuration {
+public class WorkerConfiguration extends Configuration {
     @Valid
     @NotNull
     @JsonProperty("metrics_enabled")
