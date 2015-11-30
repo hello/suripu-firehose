@@ -153,16 +153,11 @@ public class SenseDataRecordProcessor implements IRecordProcessor {
 
 
         try {
-            int inserted = deviceDataDAO.batchInsertAll(deviceDataList);
-
-            if(inserted == deviceDataList.size()) {
-                LOGGER.trace("Batch saved {} data to DB", inserted);
-            }else{
-                LOGGER.warn("Batch save failed, save {} data using itemize insert.", inserted);
-            }
-
+            final int inserted = deviceDataDAO.batchInsertAll(deviceDataList);
+            final int failures = deviceDataList.size() - inserted;
+            LOGGER.trace("Batch saved data to DB. {} successful insertions. {} failures.", inserted, failures);
             batchSaved.mark(inserted);
-            batchSaveFailures.mark(deviceDataList.size() - inserted);
+            batchSaveFailures.mark(failures);
         } catch (Exception exception) {
             LOGGER.error("Error saving data from {} to {}, {} data discarded",
                     deviceDataList.getFirst().dateTimeUTC,
