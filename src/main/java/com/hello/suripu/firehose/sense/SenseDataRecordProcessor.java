@@ -10,6 +10,7 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.suripu.api.input.DataInputProtos;
 import com.hello.suripu.core.ObjectGraphRoot;
@@ -98,10 +99,12 @@ public class SenseDataRecordProcessor implements IRecordProcessor {
                 accounts.add(metadata.getAccountId());
             }
 
-            final Map<Long, DateTimeZone> timezonesByUser;
+            Map<Long, DateTimeZone> timezonesByUser = Maps.newHashMap();
             try (final Timer.Context context = fetchTimezones.time()) {
                 timezonesByUser = SenseProcessorUtils.getTimezonesByUser(
                         deviceName, batchPeriodicDataWorker, accounts, mergedInfoDynamoDB, hasKinesisTimezonesEnabled(deviceName));
+            } catch (Exception ex) {
+                LOGGER.error("Error fetching timezones for device {}. Error: {}", deviceName, ex);
             }
 
             if(timezonesByUser.isEmpty()) {
