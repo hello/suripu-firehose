@@ -1,4 +1,4 @@
-package com.hello.suripu.firehose.sense;
+package com.hello.suripu.firehose.workers.sense;
 
 import com.amazonaws.services.kinesis.clientlibrary.exceptions.InvalidStateException;
 import com.amazonaws.services.kinesis.clientlibrary.exceptions.ShutdownException;
