@@ -2,6 +2,7 @@ package com.hello.suripu.firehose;
 
 import com.hello.suripu.firehose.framework.WorkerConfiguration;
 import com.hello.suripu.firehose.workers.sense.SenseCommand;
+import com.hello.suripu.firehose.workers.sense.TestSenseFirehoseCommand;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
@@ -23,6 +24,7 @@ public class SuripuFirehose extends Application<WorkerConfiguration> {
     @Override
     public void initialize(Bootstrap<WorkerConfiguration> bootstrap) {
         bootstrap.addCommand(new SenseCommand("sense", "save sense data to firehose"));
+        bootstrap.addCommand(new TestSenseFirehoseCommand("test_sense_firehose", "send test sense data to firehose"));
     }
 
     @Override
