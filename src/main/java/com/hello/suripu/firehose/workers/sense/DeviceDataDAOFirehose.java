@@ -148,11 +148,36 @@ public class DeviceDataDAOFirehose implements DeviceDataIngestDAO {
         return value.toString();
     }
 
+    /*
+    CREATE TABLE <tableName> (
+         account_id                 BIGINT NOT NULL,
+         external_device_id         VARCHAR(100) NOT NULL,
+         ambient_temp               INTEGER,
+         ambient_light              INTEGER,
+         ambient_humidity           INTEGER,
+         ambient_air_quality        INTEGER,
+         ts                         TIMESTAMP NOT NULL,
+         local_utc_ts               TIMESTAMP,
+         offset_millis              INTEGER,
+         ambient_light_variance     INTEGER,
+         ambient_light_peakiness    INTEGER,
+         ambient_air_quality_raw    INTEGER,
+         ambient_dust_variance      INTEGER,
+         ambient_dust_min           INTEGER,
+         ambient_dust_max           INTEGER,
+         firmware_version           INTEGER,
+         wave_count                 INTEGER,
+         hold_count                 INTEGER,
+         audio_num_disturbances     INTEGER,
+         audio_peak_disturbances_db INTEGER,
+         audio_peak_background_db   INTEGER,
+         UNIQUE(account_id, external_device_id, ts)   -- not enforced
+    );
+     */
     private static Record toRecord(final DeviceData model) {
         final String pipeDelimited = Joiner.on("|").join(
-                "0", // Dummy primary key
                 model.accountId.toString(),
-                model.deviceId.toString(),
+                model.externalDeviceId,
                 toString(model.ambientTemperature),
                 toString(model.ambientLight),
                 toString(model.ambientHumidity),
