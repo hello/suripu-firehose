@@ -1,4 +1,4 @@
-package com.hello.suripu.firehose.sense;
+package com.hello.suripu.firehose.workers.sense;
 
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.ResponseMetadata;

@@ -1,4 +1,4 @@
-package com.hello.suripu.firehose.sense;
+package com.hello.suripu.firehose.workers.sense;
 
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessor;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorFactory;

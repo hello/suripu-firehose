@@ -1,4 +1,4 @@
-package com.hello.suripu.firehose.sense;
+package com.hello.suripu.firehose.workers.sense;
 
 import com.amazonaws.services.kinesisfirehose.AmazonKinesisFirehose;
 import com.amazonaws.services.kinesisfirehose.model.PutRecordBatchResponseEntry;
