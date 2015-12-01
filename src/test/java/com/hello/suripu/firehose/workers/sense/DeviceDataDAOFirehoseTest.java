@@ -39,21 +39,21 @@ public class DeviceDataDAOFirehoseTest{
     private static final List<DeviceData> DATA_LIST = ImmutableList.of(
             new DeviceData.Builder()
                     .withAccountId(1L)
-                    .withDeviceId(2L)
+                    .withExternalDeviceId("2")
                     .withDateTimeUTC(DATE_TIME)
                     .withOffsetMillis(0)
                     .build(),
             new DeviceData.Builder()
                     .withAccountId(3L)
-                    .withDeviceId(4L)
+                    .withExternalDeviceId("4")
                     .withDateTimeUTC(DATE_TIME.plusMinutes(1))
                     .withOffsetMillis(0)
                     .build()
     );
 
     private static final List<String> EXPECTED_RESULTS = ImmutableList.of(
-            "0|1|2|0|0|0|0|2014-01-01 01:01|2014-01-01 01:01|0|0|0|0|0|0|0|0|0|0|0|0|0\n",
-            "0|3|4|0|0|0|0|2014-01-01 01:02|2014-01-01 01:02|0|0|0|0|0|0|0|0|0|0|0|0|0\n"
+            "1|2|0|0|0|0|2014-01-01 01:01|2014-01-01 01:01|0|0|0|0|0|0|0|0|0|0|0|0|0\n",
+            "3|4|0|0|0|0|2014-01-01 01:02|2014-01-01 01:02|0|0|0|0|0|0|0|0|0|0|0|0|0\n"
     );
 
 
