@@ -1,6 +1,8 @@
 package com.hello.suripu.firehose.workers.sense;
 
 import com.amazonaws.services.kinesisfirehose.AmazonKinesisFirehose;
+import com.amazonaws.services.kinesisfirehose.model.DeliveryStreamDescription;
+import com.amazonaws.services.kinesisfirehose.model.DescribeDeliveryStreamRequest;
 import com.amazonaws.services.kinesisfirehose.model.PutRecordBatchResponseEntry;
 import com.amazonaws.services.kinesisfirehose.model.PutRecordBatchResult;
 import com.amazonaws.services.kinesisfirehose.model.Record;
@@ -39,6 +41,12 @@ public class DeviceDataDAOFirehose implements DeviceDataIngestDAO {
     public DeviceDataDAOFirehose(final String deliveryStreamName, final AmazonKinesisFirehose firehose) {
         this.deliveryStreamName = deliveryStreamName;
         this.firehose = firehose;
+    }
+
+    public DeliveryStreamDescription describeStream() {
+        return firehose
+                .describeDeliveryStream(new DescribeDeliveryStreamRequest().withDeliveryStreamName(deliveryStreamName))
+                .getDeliveryStreamDescription();
     }
 
 
@@ -91,11 +99,9 @@ public class DeviceDataDAOFirehose implements DeviceDataIngestDAO {
                     .withRecords(uninsertedRecords);
 
             try {
-                LOGGER.debug("bout to try...");
                 final PutRecordBatchResult result = firehose.putRecordBatch(batchRequest);
                 uninsertedRecords = failedRecords(uninsertedRecords, result);
             } catch (ServiceUnavailableException sue) {
-                LOGGER.debug("caught it");
                 if (numAttempts < MAX_BATCH_PUT_ATTEMPTS) {
                     backoff(numAttempts);
                     continue;
