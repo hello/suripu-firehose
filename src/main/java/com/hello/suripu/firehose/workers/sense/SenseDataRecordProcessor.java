@@ -37,7 +37,7 @@ import java.util.Map;
 public class SenseDataRecordProcessor implements IRecordProcessor {
 
     @Inject
-    private RolloutClient flipper;
+    protected RolloutClient flipper;
 
     private final static Logger LOGGER = LoggerFactory.getLogger(SenseDataRecordProcessor.class);
     private final DeviceDataIngestDAO deviceDataDAO;
