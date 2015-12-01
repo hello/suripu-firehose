@@ -8,6 +8,7 @@ import com.amazonaws.services.kinesisfirehose.model.CreateDeliveryStreamRequest;
 import com.amazonaws.services.kinesisfirehose.model.CreateDeliveryStreamResult;
 import com.amazonaws.services.kinesisfirehose.model.DeleteDeliveryStreamRequest;
 import com.amazonaws.services.kinesisfirehose.model.DeleteDeliveryStreamResult;
+import com.amazonaws.services.kinesisfirehose.model.DeliveryStreamDescription;
 import com.amazonaws.services.kinesisfirehose.model.DescribeDeliveryStreamRequest;
 import com.amazonaws.services.kinesisfirehose.model.DescribeDeliveryStreamResult;
 import com.amazonaws.services.kinesisfirehose.model.ListDeliveryStreamsRequest;
@@ -197,6 +198,27 @@ public class DeviceDataDAOFirehoseTest{
         final int result = dao.batchInsertAll(DATA_LIST);
 
         assertThat(result, is(1));
+    }
+
+    @Test
+    public void testDescribeStream() {
+        final String streamName = "test_stream";
+        final String streamStatus = "Looks good to me!";
+        final AmazonKinesisFirehose firehose = new DummyFirehose() {
+            @Override
+            public DescribeDeliveryStreamResult describeDeliveryStream(DescribeDeliveryStreamRequest describeDeliveryStreamRequest) {
+                assertThat(describeDeliveryStreamRequest.getDeliveryStreamName(), is(streamName));
+                return new DescribeDeliveryStreamResult().withDeliveryStreamDescription(
+                        new DeliveryStreamDescription()
+                                .withDeliveryStreamStatus(streamStatus)
+                                .withDeliveryStreamName(streamName)
+                );
+            }
+        };
+        final DeviceDataDAOFirehose dao = new DeviceDataDAOFirehose(streamName, firehose);
+        final DeliveryStreamDescription description = dao.describeStream();
+        assertThat(description.getDeliveryStreamName(), is(streamName));
+        assertThat(description.getDeliveryStreamStatus(), is(streamStatus));
     }
 
 }

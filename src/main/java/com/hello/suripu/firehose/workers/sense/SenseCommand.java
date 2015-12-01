@@ -149,6 +149,8 @@ public class SenseCommand extends ConfiguredCommand<WorkerConfiguration> {
         firehose.setRegion(Region.getRegion(Regions.fromName(configuration.getFirehoseRegion())));
         final DeviceDataDAOFirehose firehoseDAO = new DeviceDataDAOFirehose(configuration.getFirehoseStream(), firehose);
 
+        LOGGER.info("Using firehose stream: {}", firehoseDAO.describeStream().toString());
+
         final IRecordProcessorFactory factory = new SenseDataRecordProcessorFactory(mergedUserInfoDynamoDB, firehoseDAO, configuration.getMaxRecords(), environment.metrics());
 
         final Worker worker = new Worker(factory, kinesisClientLibConfiguration);

@@ -7,6 +7,7 @@ import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.kinesisfirehose.AmazonKinesisFirehose;
 import com.amazonaws.services.kinesisfirehose.AmazonKinesisFirehoseClient;
+import com.amazonaws.services.kinesisfirehose.model.DescribeDeliveryStreamRequest;
 import com.google.common.collect.ImmutableList;
 import com.hello.suripu.core.models.DeviceData;
 import com.hello.suripu.firehose.framework.WorkerConfiguration;
@@ -34,16 +35,20 @@ public class TestSenseFirehoseCommand extends ConfiguredCommand<WorkerConfigurat
         firehose.setRegion(Region.getRegion(Regions.fromName(configuration.getFirehoseRegion())));
         final DeviceDataDAOFirehose firehoseDAO = new DeviceDataDAOFirehose(configuration.getFirehoseStream(), firehose);
 
+        System.out.println(firehoseDAO.describeStream().toString());
+
         final DateTime dateTime = DateTime.now().minusMinutes(5);
         final List<DeviceData> dataList = ImmutableList.of(
                 new DeviceData.Builder()
                         .withAccountId(1L)
+                        .withDeviceId(2L)
                         .withExternalDeviceId("2L")
                         .withDateTimeUTC(dateTime)
                         .withOffsetMillis(0)
                         .build(),
                 new DeviceData.Builder()
                         .withAccountId(3L)
+                        .withDeviceId(4L)
                         .withExternalDeviceId("4L")
                         .withDateTimeUTC(dateTime.plusMinutes(1))
                         .withOffsetMillis(0)
