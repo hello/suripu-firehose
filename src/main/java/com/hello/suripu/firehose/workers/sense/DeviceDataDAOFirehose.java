@@ -170,8 +170,7 @@ public class DeviceDataDAOFirehose implements DeviceDataIngestDAO {
          hold_count                 INTEGER,
          audio_num_disturbances     INTEGER,
          audio_peak_disturbances_db INTEGER,
-         audio_peak_background_db   INTEGER,
-         UNIQUE(account_id, external_device_id, ts)   -- not enforced
+         audio_peak_background_db   INTEGER
     );
      */
     private static Record toRecord(final DeviceData model) {
