@@ -99,11 +99,9 @@ public class DeviceDataDAOFirehose implements DeviceDataIngestDAO {
                     .withRecords(uninsertedRecords);
 
             try {
-                LOGGER.debug("bout to try...");
                 final PutRecordBatchResult result = firehose.putRecordBatch(batchRequest);
                 uninsertedRecords = failedRecords(uninsertedRecords, result);
             } catch (ServiceUnavailableException sue) {
-                LOGGER.debug("caught it");
                 if (numAttempts < MAX_BATCH_PUT_ATTEMPTS) {
                     backoff(numAttempts);
                     continue;
