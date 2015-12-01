@@ -38,13 +38,13 @@ public class TestSenseFirehoseCommand extends ConfiguredCommand<WorkerConfigurat
         final List<DeviceData> dataList = ImmutableList.of(
                 new DeviceData.Builder()
                         .withAccountId(1L)
-                        .withDeviceId(2L)
+                        .withExternalDeviceId("2L")
                         .withDateTimeUTC(dateTime)
                         .withOffsetMillis(0)
                         .build(),
                 new DeviceData.Builder()
                         .withAccountId(3L)
-                        .withDeviceId(4L)
+                        .withExternalDeviceId("4L")
                         .withDateTimeUTC(dateTime.plusMinutes(1))
                         .withOffsetMillis(0)
                         .build()
