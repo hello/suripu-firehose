@@ -5,9 +5,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.hello.suripu</groupId>
-    <artifactId>firehose-worker</artifactId>
+    <artifactId>sense-firehose</artifactId>
     <version>0.1.0-SNAPSHOT</version>
-    <name>firehose-worker</name>
+    <name>sense-firehose</name>
     <url>http://hello.is</url>
 
     <properties>
