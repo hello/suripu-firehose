@@ -15,7 +15,7 @@ kinesis:
 
 firehose:
   region: us-east-1
-  stream: sense_data
+  stream: prod_sense_data
 
 app_name: SenseFirehoseProd
 
