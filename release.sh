@@ -8,4 +8,4 @@ git push origin PRODUCTION
 git checkout $CURR_BRANCH
 
 REPO_NAME=`basename \`git rev-parse --show-toplevel\``
-echo 'View build status at: https://travis-ci.com/hello/'${REPO_NAME}
+open 'https://travis-ci.com/hello/'${REPO_NAME}
