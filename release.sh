@@ -6,3 +6,6 @@ git checkout PRODUCTION
 git merge master --no-edit
 git push origin PRODUCTION
 git checkout $CURR_BRANCH
+
+REPO_NAME=`basename \`git rev-parse --show-toplevel\``
+open 'https://travis-ci.com/hello/'${REPO_NAME}
