@@ -177,7 +177,9 @@ public class DeviceDataDAOFirehose implements DeviceDataIngestDAO {
          audio_num_disturbances     INTEGER,
          audio_peak_disturbances_db INTEGER,
          audio_peak_background_db   INTEGER
-    );
+    )
+    DISTKEY (account_id)
+    SORTKEY (account_id, local_utc_ts);
      */
     private static Record toRecord(final DeviceData model) {
         final String pipeDelimited = Joiner.on("|").join(
