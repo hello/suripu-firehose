@@ -176,7 +176,8 @@ public class DeviceDataDAOFirehose implements DeviceDataIngestDAO {
          hold_count                 INTEGER,
          audio_num_disturbances     INTEGER,
          audio_peak_disturbances_db INTEGER,
-         audio_peak_background_db   INTEGER
+         audio_peak_background_db   INTEGER,
+         audio_peak_energy_db       INTEGER
     )
     DISTKEY (account_id)
     SORTKEY (account_id, local_utc_ts);
@@ -203,7 +204,8 @@ public class DeviceDataDAOFirehose implements DeviceDataIngestDAO {
                 toString(model.holdCount),
                 toString(model.audioNumDisturbances),
                 toString(model.audioPeakDisturbancesDB),
-                toString(model.audioPeakBackgroundDB));
+                toString(model.audioPeakBackgroundDB),
+                toString(model.audioPeakEnergyDB));
         final String data = pipeDelimited + "\n";
         return createRecord(data);
     }
