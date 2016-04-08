@@ -13,6 +13,7 @@ import com.hello.suripu.core.db.DeviceDataIngestDAO;
 import com.hello.suripu.core.models.DeviceData;
 
 import com.amazonaws.services.kinesisfirehose.model.PutRecordBatchRequest;
+import com.hello.suripu.firehose.FirehoseDAO;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -25,28 +26,13 @@ import java.util.List;
 /**
  * Created by jakepiccolo on 11/17/15.
  */
-public class DeviceDataDAOFirehose implements DeviceDataIngestDAO {
-
-    private final static Logger LOGGER = LoggerFactory.getLogger(DeviceDataDAOFirehose.class);
-
-    private final String deliveryStreamName;
-    private final AmazonKinesisFirehose firehose;
+public class DeviceDataDAOFirehose extends FirehoseDAO implements DeviceDataIngestDAO {
 
     private static final String DATE_TIME_STRING_TEMPLATE = "yyyy-MM-dd HH:mm";
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormat.forPattern(DATE_TIME_STRING_TEMPLATE);
-    private static final Integer MAX_PUT_RECORDS = 500;
-    private static final Integer MAX_BATCH_PUT_ATTEMPTS = 5;
-
 
     public DeviceDataDAOFirehose(final String deliveryStreamName, final AmazonKinesisFirehose firehose) {
-        this.deliveryStreamName = deliveryStreamName;
-        this.firehose = firehose;
-    }
-
-    public DeliveryStreamDescription describeStream() {
-        return firehose
-                .describeDeliveryStream(new DescribeDeliveryStreamRequest().withDeliveryStreamName(deliveryStreamName))
-                .getDeliveryStreamDescription();
+        super(deliveryStreamName, firehose);
     }
 
 
@@ -70,78 +56,6 @@ public class DeviceDataDAOFirehose implements DeviceDataIngestDAO {
         return DeviceDataDAOFirehose.class;
     }
     //endregion
-
-
-    /**
-     * Partition and insert all records.
-     * @return List of failed records.
-     */
-    private List<Record> batchInsertAllRecords(final List<Record> records) {
-        final List<Record> uninserted = Lists.newArrayList();
-        for (final List<Record> recordsToInsert : Lists.partition(records, MAX_PUT_RECORDS)) {
-            uninserted.addAll(batchInsertRecords(recordsToInsert));
-        }
-        return uninserted;
-    }
-
-    /**
-     * Insert records that are <= the limit set by Amazon (MAX_PUT_RECORDS).
-     * @return the list of failed records.
-     */
-    private List<Record> batchInsertRecords(final List<Record> records) {
-        int numAttempts = 0;
-        List<Record> uninsertedRecords = records;
-
-        while (!uninsertedRecords.isEmpty() && numAttempts < MAX_BATCH_PUT_ATTEMPTS) {
-            numAttempts++;
-            final PutRecordBatchRequest batchRequest = new PutRecordBatchRequest()
-                    .withDeliveryStreamName(deliveryStreamName)
-                    .withRecords(uninsertedRecords);
-
-            try {
-                final PutRecordBatchResult result = firehose.putRecordBatch(batchRequest);
-                uninsertedRecords = failedRecords(uninsertedRecords, result);
-            } catch (ServiceUnavailableException sue) {
-                if (numAttempts < MAX_BATCH_PUT_ATTEMPTS) {
-                    backoff(numAttempts);
-                    continue;
-                } else {
-                    LOGGER.error("ServiceUnavailableException persists, out of retries. Failed to write {} records.",
-                            uninsertedRecords.size());
-                }
-            }
-        }
-
-        return uninsertedRecords;
-    }
-
-    private static List<Record> failedRecords(final List<Record> attemptedRecords,
-                                              final PutRecordBatchResult batchResult) {
-        final List<Record> failed = Lists.newArrayList();
-        if (batchResult.getFailedPutCount() == 0) {
-            // All successful!
-            return failed;
-        }
-
-        final List<PutRecordBatchResponseEntry> responseEntries = batchResult.getRequestResponses();
-        for (int i = 0; i < responseEntries.size(); i++) {
-            if (responseEntries.get(i).getErrorCode() != null) {
-                LOGGER.error("Encountered error code while inserting record: {}", responseEntries.get(i).getErrorCode());
-                failed.add(attemptedRecords.get(i));
-            }
-        }
-        return failed;
-    }
-
-    private void backoff(int numberOfAttempts) {
-        try {
-            long sleepMillis = (long) Math.pow(2, numberOfAttempts) * 50;
-            LOGGER.warn("Throttled by Firehose, sleeping for {} ms.", sleepMillis);
-            Thread.sleep(sleepMillis);
-        } catch (InterruptedException e) {
-            LOGGER.error("Interrupted while attempting exponential backoff.");
-        }
-    }
 
     private static String toString(final DateTime dateTime) {
         return dateTime.toString(DATE_TIME_FORMATTER);
@@ -182,7 +96,7 @@ public class DeviceDataDAOFirehose implements DeviceDataIngestDAO {
     SORTKEY (account_id, local_utc_ts);
      */
     private static Record toRecord(final DeviceData model) {
-        final String pipeDelimited = Joiner.on("|").join(
+        return toPipeDelimitedRecord(
                 model.accountId.toString(),
                 model.externalDeviceId,
                 toString(model.ambientTemperature),
@@ -203,12 +117,7 @@ public class DeviceDataDAOFirehose implements DeviceDataIngestDAO {
                 toString(model.holdCount),
                 toString(model.audioNumDisturbances),
                 toString(model.audioPeakDisturbancesDB),
-                toString(model.audioPeakBackgroundDB));
-        final String data = pipeDelimited + "\n";
-        return createRecord(data);
-    }
-
-    private static Record createRecord(final String data) {
-        return new Record().withData(ByteBuffer.wrap(data.getBytes()));
+                toString(model.audioPeakBackgroundDB)
+        );
     }
 }
