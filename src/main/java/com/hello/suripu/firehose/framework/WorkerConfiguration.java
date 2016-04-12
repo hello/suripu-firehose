@@ -2,8 +2,8 @@ package com.hello.suripu.firehose.framework;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
-import com.hello.suripu.core.configuration.KinesisConfiguration;
-import com.hello.suripu.core.configuration.NewDynamoDBConfiguration;
+import com.hello.suripu.coredw8.configuration.KinesisConfiguration;
+import com.hello.suripu.coredw8.configuration.NewDynamoDBConfiguration;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.coredw8.configuration.GraphiteConfiguration;
 import io.dropwizard.Configuration;

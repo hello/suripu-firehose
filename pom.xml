@@ -17,7 +17,7 @@
         <java.version>1.8</java.version>
         <jersey.version>2.19</jersey.version>
         <amazonaws.version>1.10.35</amazonaws.version>
-        <suripu.version>0.6.5</suripu.version>
+        <suripu.version>0.7.1</suripu.version>
         <metrics.version>3.1.2</metrics.version>
     </properties>
 
