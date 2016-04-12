@@ -1,0 +1,47 @@
+metrics_enabled: false
+debug: true
+graphite:
+  host: carbon.hostedgraphite.com
+  api_key: 7509c0ff-4db5-4cae-91ee-6e78ff13b336
+  reporting_interval_in_seconds: 30
+  include_metrics:
+    - com.yammer
+    - com.hello
+
+kinesis:
+  endpoint : https://kinesis.us-east-1.amazonaws.com
+  streams :
+    sense_sensors_data : dev_messeji_requests
+
+firehose:
+  region: us-east-1
+  stream: dev_messeji_requests_firehose
+
+app_name: MessejiFirehoseStaging
+
+max_records: 100
+
+# Logging settings.
+logging:
+
+  # The default level of all loggers. Can be OFF, ERROR, WARN, INFO, DEBUG, TRACE, or ALL.
+  level: INFO
+
+  # Logger-specific levels.
+  loggers:
+
+    # Sets the level for 'com.example.app' to DEBUG.
+    com.hello.suripu.firehose.workers.messeji: DEBUG
+  # Settings for logging to a file.
+  appenders:
+        - type: file
+          threshold: DEBUG
+          currentLogFilename: /var/log/suripu-firehose-messeji/suripu-firehose-messeji.log
+          archivedLogFilenamePattern: /var/log/suripu-firehose-messeji/suripu-firehose-messeji-%d{yyyy-MM-dd}.log.gz
+          archivedFileCount: 7
+          timeZone: UTC
+
+dynamodb:
+  region: us-east-1
+  tables:
+  endpoints:
