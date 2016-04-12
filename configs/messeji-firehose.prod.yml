@@ -19,7 +19,7 @@ firehose:
 
 app_name: MessejiFirehoseProd
 
-max_records: 500
+max_records: 400
 
 # Logging settings.
 logging:
