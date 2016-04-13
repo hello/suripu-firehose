@@ -6,6 +6,7 @@ import com.hello.messeji.api.AudioCommands;
 import com.hello.messeji.api.Logging;
 import com.hello.messeji.api.Messeji;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.Test;
 
 import java.util.List;
@@ -21,7 +22,7 @@ public class MessejiRequestFirehoseUtilTest {
     @Test
     public void testToRecordsPlayMessage() throws Exception {
         final String expectedDateString = "2016-01-01 01:01:01.001";
-        final DateTime dateTime = new DateTime(2016, 1, 1, 1, 1, 1, 1);
+        final DateTime dateTime = new DateTime(2016, 1, 1, 1, 1, 1, 1, DateTimeZone.UTC);
         final String senseId = "sense";
         final Long order = 200L;
         final String senderId = "sender";
@@ -62,7 +63,7 @@ public class MessejiRequestFirehoseUtilTest {
     @Test
     public void testToRecordsReceiveMessages() throws Exception {
         final String expectedDateString = "2016-01-01 01:01:01.001";
-        final DateTime dateTime = new DateTime(2016, 1, 1, 1, 1, 1, 1);
+        final DateTime dateTime = new DateTime(2016, 1, 1, 1, 1, 1, 1, DateTimeZone.UTC);
         final String senseId = "sense";
         final Long messageId1 = 1L;
         final Long messageId2 = 2L;

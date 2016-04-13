@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import com.hello.messeji.api.Logging;
 import com.hello.suripu.firehose.FirehoseDAO;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
@@ -27,6 +28,10 @@ public class MessejiRequestFirehoseUtil {
 
     private static void addString(final List<String> columns, final Object object) {
         columns.add(toString(object));
+    }
+
+    private static String dateTimeString(final long millis) {
+        return new DateTime(millis, DateTimeZone.UTC).toString(DATE_TIME_FORMATTER);
     }
 
     /*
@@ -60,7 +65,7 @@ public class MessejiRequestFirehoseUtil {
 
         final List<String> columns = Lists.newArrayList();
         addString(columns, requestLog.getType());
-        addString(columns, requestLog.hasTimestamp() ? new DateTime(requestLog.getTimestamp()).toString(DATE_TIME_FORMATTER) : null);
+        addString(columns, requestLog.hasTimestamp() ?  dateTimeString(requestLog.getTimestamp()): null);
         addString(columns, requestLog.getSenseId());
         addString(columns, hasMessage ? requestLog.getMessageRequest().getType() : null);
         addString(columns, hasMessage ? requestLog.getMessageRequest().getSenderId() : null);
