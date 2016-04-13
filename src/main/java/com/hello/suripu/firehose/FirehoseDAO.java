@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -109,10 +110,14 @@ public class FirehoseDAO {
         }
     }
 
-    public static Record toPipeDelimitedRecord(final String... strings) {
+    public static Record toPipeDelimitedRecord(final Iterable<String> strings) {
         final String pipeDelimited = Joiner.on("|").join(strings);
         final String data = pipeDelimited + "\n";
         return createRecord(data);
+    }
+
+    public static Record toPipeDelimitedRecord(final String... strings) {
+        return toPipeDelimitedRecord(Arrays.asList(strings));
     }
 
     private static Record createRecord(final String data) {
