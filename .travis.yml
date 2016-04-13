@@ -16,8 +16,9 @@ script:
 - mkdir -p $TEMP_DIR/etc/hello
 - mkdir -p $TEMP_DIR/etc/init/
 - mkdir deb-pkg
-- cp configs/$APP_NAME.prod.yml $TEMP_DIR/etc/hello/$APP_NAME.yml
-- cp init/$APP_NAME.conf $TEMP_DIR/etc/init/
+- cp configs/sense-firehose.prod.yml $TEMP_DIR/etc/hello/sense-firehose.yml
+- cp configs/messeji-firehose.prod.yml $TEMP_DIR/etc/hello/messeji-firehose.yml
+- cp init/*.conf $TEMP_DIR/etc/init/
 - mvn versions:set -DnewVersion=$BUILD_NUMBER
 - mvn versions:commit
 - mvn --settings settings.xml clean package
