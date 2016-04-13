@@ -10,6 +10,7 @@ import com.amazonaws.services.kinesisfirehose.model.InvalidArgumentException;
 import com.amazonaws.services.kinesisfirehose.model.ResourceNotFoundException;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hello.messeji.api.Logging;
@@ -53,19 +54,28 @@ public class MessejiRequestLogProcessor implements IRecordProcessor {
         this.shardId = shardId;
     }
 
-    private void checkpoint(IRecordProcessorCheckpointer checkpointer) {
+    private void checkpoint(IRecordProcessorCheckpointer checkpointer, final Optional<String> sequenceNumber) {
+        final String sequenceNumberString = sequenceNumber.isPresent() ? sequenceNumber.get() : "";
         try {
-            checkpointer.checkpoint();
-            LOGGER.info("checkpoint=success");
+            if (sequenceNumber.isPresent()) {
+                checkpointer.checkpoint(sequenceNumber.get());
+            } else {
+                checkpointer.checkpoint();
+            }
+            LOGGER.info("checkpoint=success sequence-number={}", sequenceNumberString);
         } catch (InvalidStateException e) {
-            LOGGER.error("checkpoint=failure error=InvalidStateException exception={}", e);
+            LOGGER.error("checkpoint=failure sequence-number={} error=InvalidStateException exception={}", sequenceNumberString, e);
         } catch (ShutdownException e) {
-            LOGGER.error("checkpoint=failure error=ShutdownException exception={}", e);
+            LOGGER.error("checkpoint=failure sequence-number={} error=ShutdownException exception={}", sequenceNumberString, e);
         }
     }
 
     @Override
-    public void processRecords(List<Record> records, IRecordProcessorCheckpointer checkpointer) {
+    public void processRecords(final List<Record> records, final IRecordProcessorCheckpointer checkpointer) {
+        final Optional<String> lastSequenceNumber = records.isEmpty()
+                ? Optional.absent()
+                : Optional.of(records.get(records.size()-1).getSequenceNumber());
+
         final List<Logging.RequestLog> requestLogs = Lists.newArrayListWithExpectedSize(records.size());
         for (final Record record : records) {
             final byte[] bytes = record.getData().array();
@@ -81,18 +91,18 @@ public class MessejiRequestLogProcessor implements IRecordProcessor {
 
         try {
             final List<com.amazonaws.services.kinesisfirehose.model.Record> failedRecords = firehoseDAO.batchInsertAllRecords(recordsToInsert);
-            checkpoint(checkpointer);
+            checkpoint(checkpointer, lastSequenceNumber);
             recordsProcessed.mark(records.size());
             batchSaved.mark(recordsToInsert.size() - failedRecords.size());
             batchSaveFailures.mark(failedRecords.size());
         } catch (InvalidArgumentException iae) {
             LOGGER.error("error=InvalidArgumentException exception={}", iae);
-            checkpoint(checkpointer);
+            checkpoint(checkpointer, lastSequenceNumber);
         } catch (ResourceNotFoundException rnfe) {
             // Do not checkpoint
             LOGGER.error("error=ResourceNotFoundException exception={}", rnfe);
         } catch (Exception e) {
-            checkpoint(checkpointer);
+            checkpoint(checkpointer, lastSequenceNumber);
             LOGGER.error("error=Exception exception={}", e);
         }
     }
@@ -101,7 +111,7 @@ public class MessejiRequestLogProcessor implements IRecordProcessor {
     public void shutdown(IRecordProcessorCheckpointer checkpointer, ShutdownReason reason) {
         LOGGER.warn("shutdown-reason={}", reason.toString());
         if (reason == ShutdownReason.TERMINATE) {
-            checkpoint(checkpointer);
+            checkpoint(checkpointer, Optional.absent());
         }
     }
 }
