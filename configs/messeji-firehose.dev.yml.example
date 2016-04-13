@@ -33,9 +33,3 @@ logging:
     # Sets the level for 'com.example.app' to DEBUG.
     com.hello.suripu.firehose.workers.messeji: DEBUG
   # Settings for logging to a file.
-
-dynamodb:
-  region: us-east-1
-  tables:
-  endpoints:
-

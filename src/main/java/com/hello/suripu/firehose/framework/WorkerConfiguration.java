@@ -66,7 +66,6 @@ public class WorkerConfiguration extends Configuration {
     public Boolean getDebug() { return debug; }
 
     @Valid
-    @NotNull
     @JsonProperty("dynamodb")
     private NewDynamoDBConfiguration dynamoDBConfiguration;
     public NewDynamoDBConfiguration dynamoDBConfiguration(){

@@ -40,8 +40,3 @@ logging:
           archivedLogFilenamePattern: /var/log/suripu-firehose-messeji/suripu-firehose-messeji-%d{yyyy-MM-dd}.log.gz
           archivedFileCount: 7
           timeZone: UTC
-
-dynamodb:
-  region: us-east-1
-  tables:
-  endpoints:
