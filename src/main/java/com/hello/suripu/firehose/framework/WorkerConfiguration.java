@@ -2,11 +2,12 @@ package com.hello.suripu.firehose.framework;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
-import com.hello.suripu.coredw8.configuration.KinesisConfiguration;
-import com.hello.suripu.coredw8.configuration.NewDynamoDBConfiguration;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.coredw8.configuration.GraphiteConfiguration;
+import com.hello.suripu.coredw8.configuration.KinesisConfiguration;
+import com.hello.suripu.coredw8.configuration.NewDynamoDBConfiguration;
 import io.dropwizard.Configuration;
+import io.dropwizard.db.DataSourceFactory;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Max;
@@ -84,4 +85,14 @@ public class WorkerConfiguration extends Configuration {
     @JsonProperty("trim_horizon")
     private Boolean trimHorizon = Boolean.TRUE;
     public Boolean getTrimHorizon() {return trimHorizon;}
+
+    @Valid
+    @NotNull
+    @JsonProperty("common_db")
+    private DataSourceFactory commonDB = new DataSourceFactory();
+    public DataSourceFactory getCommonDB() {
+        return commonDB;
+    }
+
+
 }

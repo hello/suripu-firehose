@@ -1,0 +1,86 @@
+metrics_enabled: false
+debug: true
+graphite:
+  host: carbon.hostedgraphite.com
+  api_key: 7509c0ff-4db5-4cae-91ee-6e78ff13b336
+  reporting_interval_in_seconds: 30
+  include_metrics:
+    - com.yammer
+    - com.hello
+
+common_db:
+  driverClass: org.postgresql.Driver
+  user: ingress_user
+  password: hello ingress user
+  url: jdbc:postgresql://chanku-test.cdawj8qazvva.us-east-1.rds.amazonaws.com:5432/chanku
+  properties:
+    hibernate.dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
+
+  # any properties specific to your JDBC driver:
+  properties:
+    charSet: UTF-8
+
+  # the maximum amount of time to wait on an empty pool before throwing an exception
+  maxWaitForConnection: 1s
+
+  # the SQL query to run when validating a connection's liveness
+  validationQuery: "/* MyService Health Check */ SELECT 1"
+
+  initialSize: 2
+
+  # the minimum number of connections to keep open
+  minSize: 2
+
+  # the maximum number of connections to keep open
+  maxSize: 8
+
+  # whether or not idle connections should be validated
+  checkConnectionWhileIdle: false
+
+  # the amount of time to sleep between runs of the idle connection validation, abandoned cleaner and idle pool resizing
+  evictionInterval: 10s
+
+  # the minimum amount of time an connection must sit idle in the pool before it is eligible for eviction
+  minIdleTime: 1 minute
+
+kinesis:
+  endpoint : https://kinesis.us-east-1.amazonaws.com
+  streams :
+    batch_pill_data : dev_batch_pill_datafirehose:
+  region: us-east-1
+  stream: dev_sense_data
+
+app_name: PillFirehoseStaging
+
+max_records: 100
+
+# Logging settings.
+logging:
+
+  # The default level of all loggers. Can be OFF, ERROR, WARN, INFO, DEBUG, TRACE, or ALL.
+  level: INFO
+
+  # Logger-specific levels.
+  loggers:
+
+    # Sets the level for 'com.example.app' to DEBUG.
+    com.hello.suripu.firehose: DEBUG
+  # Settings for logging to a file.
+  appenders:
+        - type: file
+          threshold: DEBUG
+          currentLogFilename: /var/log/suripu-firehose/suripu-firehose-pill.log
+          archivedLogFilenamePattern: /var/log/suripu-firehose/suripu-firehose-pill-%d{yyyy-MM-dd}.log.gz
+          archivedFileCount: 7
+          timeZone: UTC
+
+dynamodb:
+  region: us-east-1
+  tables:
+    alarm_info: alarm_info
+    features: features
+    pill_key_store : pill_key_store
+  endpoints:
+    alarm_info: http://dynamodb.us-east-1.amazonaws.com
+    features : http://dynamodb.us-east-1.amazonaws.com
+    pill_key_store : http://dynamodb.us-east-1.amazonaws.com
