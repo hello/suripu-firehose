@@ -191,9 +191,9 @@ public class PillProcessor implements IRecordProcessor {
                     try {
                         final TrackerMotion trackerMotion = TrackerMotion.create(data, pair, timeZoneOptional.get(), optionalDecryptionKey.get());
                         trackerData.add(trackerMotion);
-                        LOGGER.trace("Tracker Data added for batch insert for pill_id = {}", pair.externalDeviceId);
+                        LOGGER.trace("action=added-tracker-data-for-batch-insert pill_id={}", pair.externalDeviceId);
                     } catch (TrackerMotion.InvalidEncryptedPayloadException exception) {
-                        LOGGER.error("Fail to decrypt tracker motion payload for pill {}, account {}", pair.externalDeviceId, pair.accountId);
+                        LOGGER.error("error=fail-to-decrypt-tracker-motion-payload pill_id={} account_id={}", pair.externalDeviceId, pair.accountId);
                     }
                 }
             }
@@ -222,7 +222,7 @@ public class PillProcessor implements IRecordProcessor {
 
     @Override
     public void shutdown(IRecordProcessorCheckpointer checkpointer, ShutdownReason reason) {
-        LOGGER.warn("shutdown-reason={}", reason.toString());
+        LOGGER.warn("warning=shutdown reason={}", reason.toString());
         if (reason == ShutdownReason.TERMINATE) {
             checkpoint(checkpointer, Optional.absent());
         }

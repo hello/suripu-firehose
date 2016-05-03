@@ -46,9 +46,11 @@ common_db:
 kinesis:
   endpoint : https://kinesis.us-east-1.amazonaws.com
   streams :
-    batch_pill_data : dev_batch_pill_datafirehose:
+    batch_pill_data : dev_batch_pill_data
+
+firehose:
   region: us-east-1
-  stream: dev_sense_data
+  stream: dev_pill_data
 
 app_name: PillFirehoseStaging
 
