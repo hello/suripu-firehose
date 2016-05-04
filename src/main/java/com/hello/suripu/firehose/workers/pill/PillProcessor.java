@@ -126,88 +126,93 @@ public class PillProcessor implements IRecordProcessor {
         }
 
         // process pill data
-        try {
-            // get decryption key from keystore
-            final Map<String, Optional<byte[]>> keys = pillKeyStore.getBatch(pillIds);
-            if(keys.isEmpty()) {
-                LOGGER.error("error=fail-to-retrieve-decryption-keys-bailing");
-                System.exit(1);
-            }
-
-            pillKeys.putAll(keys);
-
-            // get external_pill_id to account_id mapping (commonDB)
-            for (final String pillId : pillIds) {
-                final Optional<DeviceAccountPair> optionalPair = deviceDAO.getInternalPillId(pillId);
-                pairs.put(pillId, optionalPair);
-            }
-
-            // get timezones from alarm_info via external_sense_id
-            for (final String pillId : pillIds) {
-                final String senseId = pillIdToSenseId.get(pillId);
-                final Optional<DeviceAccountPair> pair = pairs.get(pillId);
-                if (pair.isPresent()) {
-                    final Optional<UserInfo> userInfoOptional = mergedUserInfoDynamoDB.getInfo(senseId, pair.get().accountId);
-                    userInfos.put(pillId, userInfoOptional);
-                } else {
-                    userInfos.put(pillId, Optional.<UserInfo>absent());
-                }
-            }
-
-            for (final SenseCommandProtos.pill_data data : pillData) {
-                final String external_pill_id = data.getDeviceId();
-
-                final Optional<byte[]> optionalDecryptionKey = pillKeys.get(external_pill_id);
-
-                // The key should not be null
-                if (!optionalDecryptionKey.isPresent()) {
-                    LOGGER.error("error=missing-decryption-key pill_id={}", external_pill_id);
-                    continue;
+        if (!pillData.isEmpty()) {
+            try {
+                // get decryption key from keystore
+                final Map<String, Optional<byte[]>> keys = pillKeyStore.getBatch(pillIds);
+                if (keys.isEmpty()) {
+                    LOGGER.error("error=fail-to-retrieve-decryption-keys-bailing");
+                    System.exit(1);
                 }
 
-                final Optional<DeviceAccountPair> optionalPair = pairs.get(external_pill_id);
-                if (!optionalPair.isPresent()) {
-                    LOGGER.error("error=missing-pairing-in-account-tracker-map pill_id:{}", external_pill_id);
-                    continue;
-                }
-                final DeviceAccountPair pair = optionalPair.get(); // for account_id
+                pillKeys.putAll(keys);
 
-                final Optional<UserInfo> userInfoOptional = userInfos.get(external_pill_id);
-                if (!userInfoOptional.isPresent()) {
-                    final String senseId = pillIdToSenseId.get(external_pill_id);
-                    LOGGER.error("error=missing-UserInfo account_id={} pill_external_id={} and sense_id = {}", pair.accountId, pair.externalDeviceId, senseId);
-                    continue;
+                // get external_pill_id to account_id mapping (commonDB)
+                for (final String pillId : pillIds) {
+                    final Optional<DeviceAccountPair> optionalPair = deviceDAO.getInternalPillId(pillId);
+                    pairs.put(pillId, optionalPair);
                 }
 
-                final UserInfo userInfo = userInfoOptional.get();
-                final Optional<DateTimeZone> timeZoneOptional = userInfo.timeZone;
-                if (!timeZoneOptional.isPresent()) {
-                    LOGGER.error("error=no-timezone account_id={} pill_id={}", pair.accountId, pair.externalDeviceId);
-                    continue;
-                }
-
-
-                if (data.hasMotionDataEntrypted()) {
-                    try {
-                        final TrackerMotion trackerMotion = TrackerMotion.create(data, pair, timeZoneOptional.get(), optionalDecryptionKey.get());
-                        trackerData.add(trackerMotion);
-                        LOGGER.trace("action=added-tracker-data-for-batch-insert pill_id={}", pair.externalDeviceId);
-                    } catch (TrackerMotion.InvalidEncryptedPayloadException exception) {
-                        LOGGER.error("error=fail-to-decrypt-tracker-motion-payload pill_id={} account_id={}", pair.externalDeviceId, pair.accountId);
+                // get timezones from alarm_info via external_sense_id
+                for (final String pillId : pillIds) {
+                    final String senseId = pillIdToSenseId.get(pillId);
+                    final Optional<DeviceAccountPair> pair = pairs.get(pillId);
+                    if (pair.isPresent()) {
+                        final Optional<UserInfo> userInfoOptional = mergedUserInfoDynamoDB.getInfo(senseId, pair.get().accountId);
+                        userInfos.put(pillId, userInfoOptional);
+                    } else {
+                        userInfos.put(pillId, Optional.<UserInfo>absent());
                     }
                 }
+
+                for (final SenseCommandProtos.pill_data data : pillData) {
+                    final String external_pill_id = data.getDeviceId();
+
+                    final Optional<byte[]> optionalDecryptionKey = pillKeys.get(external_pill_id);
+
+                    // The key should not be null
+                    if (!optionalDecryptionKey.isPresent()) {
+                        LOGGER.error("error=missing-decryption-key pill_id={}", external_pill_id);
+                        continue;
+                    }
+
+                    final Optional<DeviceAccountPair> optionalPair = pairs.get(external_pill_id);
+                    if (!optionalPair.isPresent()) {
+                        LOGGER.error("error=missing-pairing-in-account-tracker-map pill_id={}", external_pill_id);
+                        continue;
+                    }
+                    final DeviceAccountPair pair = optionalPair.get(); // for account_id
+
+                    final Optional<UserInfo> userInfoOptional = userInfos.get(external_pill_id);
+                    if (!userInfoOptional.isPresent()) {
+                        final String senseId = pillIdToSenseId.get(external_pill_id);
+                        LOGGER.error("error=missing-UserInfo account_id={} pill_external_id={} and sense_id={}", pair.accountId, pair.externalDeviceId, senseId);
+                        continue;
+                    }
+
+                    final UserInfo userInfo = userInfoOptional.get();
+                    final Optional<DateTimeZone> timeZoneOptional = userInfo.timeZone;
+                    if (!timeZoneOptional.isPresent()) {
+                        LOGGER.error("error=no-timezone account_id={} pill_id={}", pair.accountId, pair.externalDeviceId);
+                        continue;
+                    }
+
+
+                    if (data.hasMotionDataEntrypted()) {
+                        try {
+                            final TrackerMotion trackerMotion = TrackerMotion.create(data, pair, timeZoneOptional.get(), optionalDecryptionKey.get());
+                            trackerData.add(trackerMotion);
+                        } catch (TrackerMotion.InvalidEncryptedPayloadException exception) {
+                            LOGGER.error("error=fail-to-decrypt-tracker-motion-payload pill_id={} account_id={}", pair.externalDeviceId, pair.accountId);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                LOGGER.error("error=fail-processing-pill error_msg={} exception={}", e.getMessage(), e);
             }
-        } catch (Exception e) {
-            LOGGER.error("error=fail-processing-pill error_msg={} exception={}", e.getMessage(), e);
         }
 
 
         try {
-            final int failedCounts = firehoseDAO.batchInsertAll(trackerData);
+            if (!trackerData.isEmpty()) {
+                final int inserted = firehoseDAO.batchInsertAll(trackerData);
+                final int failures = trackerData.size() - inserted;
+                LOGGER.debug("action=batch-insert-firehose batch_size={} inserted={} failures={}", trackerData.size(), inserted, failures);
+                batchSaved.mark(inserted);
+                batchSaveFailures.mark(failures);
+            }
             checkpoint(checkpointer, lastSequenceNumber);
             recordsProcessed.mark(records.size());
-            batchSaved.mark(trackerData.size() - failedCounts);
-            batchSaveFailures.mark(failedCounts);
         } catch (InvalidArgumentException iae) {
             LOGGER.error("error=InvalidArgumentException exception={}", iae);
             checkpoint(checkpointer, lastSequenceNumber);

@@ -17,7 +17,7 @@ import java.util.List;
  */
 public class PillDataDAOFirehose extends FirehoseDAO {
 
-    private static final String DATE_TIME_STRING_TEMPLATE = "yyyy-MM-dd HH:mm";
+    private static final String DATE_TIME_STRING_TEMPLATE = "yyyy-MM-dd HH:mm:ss";
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormat.forPattern(DATE_TIME_STRING_TEMPLATE);
 
     public PillDataDAOFirehose(final String deliveryStreamName, final AmazonKinesisFirehose firehose) {
@@ -35,6 +35,7 @@ public class PillDataDAOFirehose extends FirehoseDAO {
         final List<Record> failedRecords = batchInsertAllRecords(records);
 
         return pillData.size() - failedRecords.size();
+
     }
 
     public Class name() {
