@@ -54,33 +54,38 @@ public class PillCommand<W extends Configuration> extends EnvironmentCommand<Wor
             LOGGER.warn("Metrics not enabled.");
         }
 
+        // common-replica
         final DBIFactory dbiFactory = new DBIFactory();
         final DBI commonDBI = dbiFactory.build(environment, configuration.getCommonDB(), "postgresql-common");
         commonDBI.registerArgumentFactory(new JodaArgumentFactory());
         final DeviceDAO deviceDAO = commonDBI.onDemand(DeviceDAO.class);
 
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
-        final KinesisClientLibConfiguration kinesisClientLibConfiguration = ConfigurationUtil.getKclConfig(configuration, awsCredentialsProvider, QueueName.BATCH_PILL_DATA);
 
+        // set up firehose
         final ClientConfiguration clientConfiguration = new ClientConfiguration().withConnectionTimeout(200).withMaxErrorRetry(1);
         final AmazonKinesisFirehose firehose = new AmazonKinesisFirehoseClient(awsCredentialsProvider, clientConfiguration);
         firehose.setRegion(Region.getRegion(Regions.fromName(configuration.getFirehoseRegion())));
         final PillDataDAOFirehose firehoseDAO = new PillDataDAOFirehose(configuration.getFirehoseStream(), firehose);
 
-        // Set up merged user info and keystore
+        // Set up merged user info and keystore dynamoDB
         final AmazonDynamoDBClientFactory amazonDynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider, configuration.dynamoDBConfiguration());
         final ImmutableMap<DynamoDBTableName, String> tableNames = configuration.dynamoDBConfiguration().tables();
-        final AmazonDynamoDB alarmInfoDynamoDBClient = amazonDynamoDBClientFactory.getInstrumented(DynamoDBTableName.ALARM_INFO, MergedUserInfoDynamoDB.class);
-        final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(alarmInfoDynamoDBClient , tableNames.get(DynamoDBTableName.ALARM_INFO));
 
-        final AmazonDynamoDB pillKeyStoreDynamoDB = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.PILL_KEY_STORE);
+        final AmazonDynamoDB alarmInfoDynamoDBClient = amazonDynamoDBClientFactory.getInstrumented(DynamoDBTableName.ALARM_INFO, MergedUserInfoDynamoDB.class);
+        final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(alarmInfoDynamoDBClient, tableNames.get(DynamoDBTableName.ALARM_INFO));
+
+        final AmazonDynamoDB pillKeyStoreDynamoDB = amazonDynamoDBClientFactory.getInstrumented(DynamoDBTableName.PILL_KEY_STORE, KeyStoreDynamoDB.class);
         final KeyStore pillKeyStore = new KeyStoreDynamoDB(pillKeyStoreDynamoDB,tableNames.get(DynamoDBTableName.PILL_KEY_STORE), new byte[16], 120);
 
         LOGGER.info("Using firehose stream: {}", firehoseDAO.describeStream().toString());
 
         final IRecordProcessorFactory factory = new PillProcessorFactory(mergedUserInfoDynamoDB, pillKeyStore, deviceDAO, firehoseDAO, environment.metrics());
 
+        // consume kinesis
+        final KinesisClientLibConfiguration kinesisClientLibConfiguration = ConfigurationUtil.getKclConfig(configuration, awsCredentialsProvider, QueueName.BATCH_PILL_DATA);
         final Worker worker = new Worker(factory, kinesisClientLibConfiguration);
+
         worker.run();
     }
 
