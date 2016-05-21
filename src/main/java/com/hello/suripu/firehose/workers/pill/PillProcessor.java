@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by ksg via jakey on 05/02/16
@@ -79,35 +78,30 @@ public class PillProcessor implements IRecordProcessor {
         this.shardId = shardId;
     }
 
-    private void checkpoint(IRecordProcessorCheckpointer checkpointer, final Optional<String> sequenceNumber) {
-        final String sequenceNumberString = sequenceNumber.isPresent() ? sequenceNumber.get() : "";
+    private void checkpoint(IRecordProcessorCheckpointer checkpointer, final String sequenceNumberString) {
         try {
-            if (sequenceNumber.isPresent()) {
-                checkpointer.checkpoint(sequenceNumber.get());
+            if (sequenceNumberString.isEmpty()) {
+                checkpointer.checkpoint(sequenceNumberString);
             } else {
                 checkpointer.checkpoint();
             }
-            LOGGER.info("checkpoint=success sequence-number={}", sequenceNumberString);
+            LOGGER.info("checkpoint=success sequence_number={}", sequenceNumberString);
         } catch (InvalidStateException e) {
-            LOGGER.error("checkpoint=failure sequence-number={} error=InvalidStateException exception={}", sequenceNumberString, e);
+            LOGGER.error("checkpoint=failure sequence_number={} error=InvalidStateException exception={}", sequenceNumberString, e);
         } catch (ShutdownException e) {
-            LOGGER.error("checkpoint=failure sequence-number={} error=ShutdownException exception={}", sequenceNumberString, e);
+            LOGGER.error("checkpoint=failure sequence_number={} error=ShutdownException exception={}", sequenceNumberString, e);
         }
     }
 
     @Override
     public void processRecords(final List<Record> records, final IRecordProcessorCheckpointer checkpointer) {
-        final Optional<String> lastSequenceNumber = records.isEmpty()
-                ? Optional.absent()
-                : Optional.of(records.get(records.size()-1).getSequenceNumber());
+        final String lastSequenceNumber = records.isEmpty() ? "" : records.get(records.size()-1).getSequenceNumber();
 
         // parse kinesis records -- from pill worker
-        final ArrayList<TrackerMotion> trackerData = new ArrayList<>(records.size());
+        final ArrayList<TrackerMotion> trackerData = Lists.newArrayListWithExpectedSize(records.size());
         final List<SenseCommandProtos.pill_data> pillData = Lists.newArrayList();
-        final Map<String, Optional<byte[]>> pillKeys = Maps.newHashMap();
         final Map<String, Optional<DeviceAccountPair>> pairs = Maps.newHashMap();
         final Map<String, Optional<UserInfo>> userInfos = Maps.newHashMap();
-        final Set<String> pillIds = Sets.newHashSet();
         final Map<String, String> pillIdToSenseId = Maps.newHashMap();
 
         for (final Record record : records) {
@@ -115,7 +109,6 @@ public class PillProcessor implements IRecordProcessor {
                 final SenseCommandProtos.batched_pill_data batched_pill_data = SenseCommandProtos.batched_pill_data.parseFrom(record.getData().array());
                 for (final SenseCommandProtos.pill_data data : batched_pill_data.getPillsList()) {
                     pillData.add(data);
-                    pillIds.add(data.getDeviceId());
                     pillIdToSenseId.put(data.getDeviceId(), batched_pill_data.getDeviceId());
                 }
             } catch (InvalidProtocolBufferException e) {
@@ -128,14 +121,21 @@ public class PillProcessor implements IRecordProcessor {
         // process pill data
         if (!pillData.isEmpty()) {
             try {
-                // get decryption key from keystore
-                final Map<String, Optional<byte[]>> keys = pillKeyStore.getBatch(pillIds);
-                if (keys.isEmpty()) {
-                    LOGGER.error("error=fail-to-retrieve-decryption-keys-bailing");
-                    System.exit(1);
-                }
+                // get decryption key from keystore 100 at a time
+                final List<String> pillIds = Lists.newArrayList(pillIdToSenseId.keySet());
+                final List<List<String>> pillIdsList = Lists.partition(pillIds, 100);
 
-                pillKeys.putAll(keys);
+                final Map<String, Optional<byte[]>> pillKeys = Maps.newHashMap();
+
+                for (final List<String> batch : pillIdsList) {
+                    final Map<String, Optional<byte[]>> keys = pillKeyStore.getBatch(Sets.newHashSet(batch));
+                    if (keys.isEmpty()) {
+                        LOGGER.error("error=fail-to-retrieve-decryption-keys-bailing");
+                        System.exit(1);
+                    }
+
+                    pillKeys.putAll(keys);
+                }
 
                 // get external_pill_id to account_id mapping (commonDB)
                 for (final String pillId : pillIds) {
@@ -165,6 +165,8 @@ public class PillProcessor implements IRecordProcessor {
                         LOGGER.error("error=missing-decryption-key pill_id={}", external_pill_id);
                         continue;
                     }
+                    final byte[] decryptKey = optionalDecryptionKey.get();
+
 
                     final Optional<DeviceAccountPair> optionalPair = pairs.get(external_pill_id);
                     if (!optionalPair.isPresent()) {
@@ -186,11 +188,12 @@ public class PillProcessor implements IRecordProcessor {
                         LOGGER.error("error=no-timezone account_id={} pill_id={}", pair.accountId, pair.externalDeviceId);
                         continue;
                     }
+                    final DateTimeZone timeZone = timeZoneOptional.get();
 
 
                     if (data.hasMotionDataEntrypted()) {
                         try {
-                            final TrackerMotion trackerMotion = TrackerMotion.create(data, pair, timeZoneOptional.get(), optionalDecryptionKey.get());
+                            final TrackerMotion trackerMotion = TrackerMotion.create(data, pair, timeZone, decryptKey);
                             trackerData.add(trackerMotion);
                         } catch (TrackerMotion.InvalidEncryptedPayloadException exception) {
                             LOGGER.error("error=fail-to-decrypt-tracker-motion-payload pill_id={} account_id={}", pair.externalDeviceId, pair.accountId);
@@ -229,7 +232,7 @@ public class PillProcessor implements IRecordProcessor {
     public void shutdown(IRecordProcessorCheckpointer checkpointer, ShutdownReason reason) {
         LOGGER.warn("warning=shutdown reason={}", reason.toString());
         if (reason == ShutdownReason.TERMINATE) {
-            checkpoint(checkpointer, Optional.absent());
+            checkpoint(checkpointer, "");
         }
     }
 }

@@ -22,9 +22,10 @@ import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.coredw8.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.firehose.framework.ConfigurationUtil;
 import com.hello.suripu.firehose.framework.WorkerConfiguration;
-import io.dropwizard.cli.ConfiguredCommand;
+import io.dropwizard.Application;
+import io.dropwizard.Configuration;
+import io.dropwizard.cli.EnvironmentCommand;
 import io.dropwizard.jdbi.DBIFactory;
-import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import net.sourceforge.argparse4j.inf.Namespace;
 import org.skife.jdbi.v2.DBI;
@@ -34,24 +35,17 @@ import org.slf4j.LoggerFactory;
 /**
  * Created by ksg via jakey on 05/02/16
  */
-public class PillCommand extends ConfiguredCommand<WorkerConfiguration> {
+public class PillCommand<W extends Configuration> extends EnvironmentCommand<WorkerConfiguration> {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(PillCommand.class);
 
-    public PillCommand(String name, String description) {
-        super(name, description);
+    public PillCommand(Application<WorkerConfiguration> application) {
+        super(application, "pill", "pill-firehose");
     }
 
     @Override
-    protected void run(Bootstrap<WorkerConfiguration> bootstrap, Namespace namespace, WorkerConfiguration configuration) throws Exception {
-        final Environment environment = new Environment(bootstrap.getApplication().getName(),
-                bootstrap.getObjectMapper(),
-                bootstrap.getValidatorFactory().getValidator(),
-                bootstrap.getMetricRegistry(),
-                bootstrap.getClassLoader());
-        configuration.getMetricsFactory().configure(environment.lifecycle(),
-                bootstrap.getMetricRegistry());
-        bootstrap.run(configuration, environment);
+    protected void run(Environment environment, Namespace namespace, WorkerConfiguration configuration) throws Exception {
+        configuration.getMetricsFactory().configure(environment.lifecycle(), environment.metrics());
 
         if(configuration.getMetricsEnabled()) {
             ConfigurationUtil.setupGraphite(environment, configuration, "firehose");
@@ -59,6 +53,7 @@ public class PillCommand extends ConfiguredCommand<WorkerConfiguration> {
         } else {
             LOGGER.warn("Metrics not enabled.");
         }
+
         final DBIFactory dbiFactory = new DBIFactory();
         final DBI commonDBI = dbiFactory.build(environment, configuration.getCommonDB(), "postgresql-common");
         commonDBI.registerArgumentFactory(new JodaArgumentFactory());
@@ -75,7 +70,7 @@ public class PillCommand extends ConfiguredCommand<WorkerConfiguration> {
         // Set up merged user info and keystore
         final AmazonDynamoDBClientFactory amazonDynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider, configuration.dynamoDBConfiguration());
         final ImmutableMap<DynamoDBTableName, String> tableNames = configuration.dynamoDBConfiguration().tables();
-        final AmazonDynamoDB alarmInfoDynamoDBClient = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.ALARM_INFO);
+        final AmazonDynamoDB alarmInfoDynamoDBClient = amazonDynamoDBClientFactory.getInstrumented(DynamoDBTableName.ALARM_INFO, MergedUserInfoDynamoDB.class);
         final MergedUserInfoDynamoDB mergedUserInfoDynamoDB = new MergedUserInfoDynamoDB(alarmInfoDynamoDBClient , tableNames.get(DynamoDBTableName.ALARM_INFO));
 
         final AmazonDynamoDB pillKeyStoreDynamoDB = amazonDynamoDBClientFactory.getForTable(DynamoDBTableName.PILL_KEY_STORE);
@@ -88,4 +83,5 @@ public class PillCommand extends ConfiguredCommand<WorkerConfiguration> {
         final Worker worker = new Worker(factory, kinesisClientLibConfiguration);
         worker.run();
     }
+
 }
