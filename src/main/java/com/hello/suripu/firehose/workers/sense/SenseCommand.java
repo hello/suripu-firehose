@@ -14,6 +14,7 @@ import com.amazonaws.services.kinesisfirehose.AmazonKinesisFirehoseClient;
 import com.google.common.collect.ImmutableMap;
 import com.hello.suripu.core.ObjectGraphRoot;
 import com.hello.suripu.core.configuration.DynamoDBTableName;
+import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.coredw8.clients.AmazonDynamoDBClientFactory;
@@ -67,7 +68,7 @@ public class SenseCommand extends ConfiguredCommand<WorkerConfiguration> {
         }
 
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
-        final KinesisClientLibConfiguration kinesisClientLibConfiguration = ConfigurationUtil.getKclConfig(configuration, awsCredentialsProvider);
+        final KinesisClientLibConfiguration kinesisClientLibConfiguration = ConfigurationUtil.getKclConfig(configuration, awsCredentialsProvider, QueueName.SENSE_SENSORS_DATA);
 
         final AmazonDynamoDBClientFactory amazonDynamoDBClientFactory = AmazonDynamoDBClientFactory.create(awsCredentialsProvider, configuration.dynamoDBConfiguration());
 

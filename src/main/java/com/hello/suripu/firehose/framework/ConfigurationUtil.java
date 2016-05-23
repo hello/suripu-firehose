@@ -51,11 +51,12 @@ public class ConfigurationUtil {
         graphiteReporter.start(interval, TimeUnit.SECONDS);
     }
 
-    public static KinesisClientLibConfiguration getKclConfig(final WorkerConfiguration configuration, final AWSCredentialsProvider provider) throws UnknownHostException {
+    public static KinesisClientLibConfiguration getKclConfig(final WorkerConfiguration configuration, final AWSCredentialsProvider provider, final QueueName queueNameEnum) throws UnknownHostException {
         final ImmutableMap<QueueName, String> queueNames = configuration.getQueues();
 
         LOGGER.debug("{}", queueNames);
-        final String queueName = queueNames.get(QueueName.SENSE_SENSORS_DATA);
+
+        final String queueName = queueNames.get(queueNameEnum);
 
         final String workerId = InetAddress.getLocalHost().getCanonicalHostName();
         final KinesisClientLibConfiguration kinesisConfig = new KinesisClientLibConfiguration(

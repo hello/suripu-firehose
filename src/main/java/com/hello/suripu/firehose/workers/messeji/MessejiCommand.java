@@ -10,6 +10,7 @@ import com.amazonaws.services.kinesis.clientlibrary.lib.worker.KinesisClientLibC
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.Worker;
 import com.amazonaws.services.kinesisfirehose.AmazonKinesisFirehose;
 import com.amazonaws.services.kinesisfirehose.AmazonKinesisFirehoseClient;
+import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.firehose.FirehoseDAO;
 import com.hello.suripu.firehose.framework.ConfigurationUtil;
 import com.hello.suripu.firehose.framework.WorkerConfiguration;
@@ -50,7 +51,7 @@ public class MessejiCommand extends ConfiguredCommand<WorkerConfiguration> {
         }
 
         final AWSCredentialsProvider awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
-        final KinesisClientLibConfiguration kinesisClientLibConfiguration = ConfigurationUtil.getKclConfig(configuration, awsCredentialsProvider);
+        final KinesisClientLibConfiguration kinesisClientLibConfiguration = ConfigurationUtil.getKclConfig(configuration, awsCredentialsProvider, QueueName.SENSE_SENSORS_DATA);
 
         final ClientConfiguration clientConfiguration = new ClientConfiguration().withConnectionTimeout(200).withMaxErrorRetry(1);
         final AmazonKinesisFirehose firehose = new AmazonKinesisFirehoseClient(awsCredentialsProvider, clientConfiguration);

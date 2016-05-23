@@ -18,6 +18,7 @@ script:
 - mkdir deb-pkg
 - cp configs/sense-firehose.prod.yml $TEMP_DIR/etc/hello/sense-firehose.yml
 - cp configs/messeji-firehose.prod.yml $TEMP_DIR/etc/hello/messeji-firehose.yml
+- cp configs/pill-firehose/pill-firehose.prod.yml $TEMP_DIR/etc/hello/pill-firehose.yml
 - cp init/*.conf $TEMP_DIR/etc/init/
 - mvn versions:set -DnewVersion=$BUILD_NUMBER
 - mvn versions:commit
