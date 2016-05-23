@@ -23,7 +23,6 @@ import com.hello.suripu.coredw8.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.firehose.framework.ConfigurationUtil;
 import com.hello.suripu.firehose.framework.WorkerConfiguration;
 import io.dropwizard.Application;
-import io.dropwizard.Configuration;
 import io.dropwizard.cli.EnvironmentCommand;
 import io.dropwizard.jdbi.DBIFactory;
 import io.dropwizard.setup.Environment;
@@ -35,7 +34,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Created by ksg via jakey on 05/02/16
  */
-public class PillCommand<W extends Configuration> extends EnvironmentCommand<WorkerConfiguration> {
+public class PillCommand extends EnvironmentCommand<WorkerConfiguration> {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(PillCommand.class);
 
