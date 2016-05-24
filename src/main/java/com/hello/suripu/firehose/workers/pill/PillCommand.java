@@ -21,9 +21,7 @@ import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
 import com.hello.suripu.coredw8.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.firehose.framework.ConfigurationUtil;
-import com.hello.suripu.firehose.framework.WorkerConfiguration;
-import io.dropwizard.Application;
-import io.dropwizard.cli.EnvironmentCommand;
+import com.hello.suripu.firehose.framework.FirehoseEnvironmentCommand;
 import io.dropwizard.jdbi.DBIFactory;
 import io.dropwizard.setup.Environment;
 import net.sourceforge.argparse4j.inf.Namespace;
@@ -34,18 +32,16 @@ import org.slf4j.LoggerFactory;
 /**
  * Created by ksg via jakey on 05/02/16
  */
-public class PillCommand extends EnvironmentCommand<WorkerConfiguration> {
+public class PillCommand extends FirehoseEnvironmentCommand<PillFirehoseConfiguration> {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(PillCommand.class);
 
-    public PillCommand(Application<WorkerConfiguration> application) {
-        super(application, "pill", "pill-firehose");
+    public PillCommand(final String name, final String description) {
+        super(name, description);
     }
 
     @Override
-    protected void run(Environment environment, Namespace namespace, WorkerConfiguration configuration) throws Exception {
-        configuration.getMetricsFactory().configure(environment.lifecycle(), environment.metrics());
-
+    protected void run(Environment environment, Namespace namespace, PillFirehoseConfiguration configuration) throws Exception {
         if(configuration.getMetricsEnabled()) {
             ConfigurationUtil.setupGraphite(environment, configuration, "firehose");
             LOGGER.info("Metrics enabled.");
