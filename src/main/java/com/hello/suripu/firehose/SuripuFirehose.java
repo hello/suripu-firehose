@@ -28,7 +28,7 @@ public class SuripuFirehose extends Application<WorkerConfiguration> {
         bootstrap.addCommand(new SenseCommand("sense", "save sense data to firehose"));
         bootstrap.addCommand(new MessejiCommand("messeji", "save messeji request logs to firehose"));
         bootstrap.addCommand(new TestSenseFirehoseCommand("test_sense_firehose", "send test sense data to firehose"));
-        bootstrap.addCommand(new PillCommand(this));
+        bootstrap.addCommand(new PillCommand("pill", "pill firehose"));
     }
 
     @Override
