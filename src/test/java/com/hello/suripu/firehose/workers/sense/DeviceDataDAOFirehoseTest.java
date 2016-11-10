@@ -22,7 +22,10 @@ import com.amazonaws.services.kinesisfirehose.model.ServiceUnavailableException;
 import com.amazonaws.services.kinesisfirehose.model.UpdateDestinationRequest;
 import com.amazonaws.services.kinesisfirehose.model.UpdateDestinationResult;
 import com.google.common.collect.ImmutableList;
+import com.hello.suripu.core.firmware.HardwareVersion;
 import com.hello.suripu.core.models.DeviceData;
+import com.hello.suripu.core.sense.data.ExtraSensorData;
+import com.hello.suripu.core.sense.data.SenseOneFiveExtraData;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
@@ -37,6 +40,7 @@ import static org.hamcrest.core.Is.is;
 public class DeviceDataDAOFirehoseTest{
 
     private static final DateTime DATE_TIME = new DateTime(2014, 1, 1, 1, 1);
+    private static final ExtraSensorData extraData = SenseOneFiveExtraData.create(1,1,1,"abc",1,1,1,2);
     private static final List<DeviceData> DATA_LIST = ImmutableList.of(
             new DeviceData.Builder()
                     .withAccountId(1L)
@@ -49,14 +53,25 @@ public class DeviceDataDAOFirehoseTest{
                     .withExternalDeviceId("4")
                     .withDateTimeUTC(DATE_TIME.plusMinutes(1))
                     .withOffsetMillis(0)
-                    .build()
+                    .build(),
+            new DeviceData.Builder()
+            .withAccountId(4L)
+            .withExternalDeviceId("womp")
+            .withDateTimeUTC(DATE_TIME.plusMinutes(2))
+            .withOffsetMillis(0)
+            .withHardwareVersion(HardwareVersion.SENSE_ONE_FIVE)
+            .withExtraSensorData(extraData)
+            .build()
     );
 
     private static final List<String> EXPECTED_RESULTS = ImmutableList.of(
-            "1|2|0|0|0|0|2014-01-01 01:01|2014-01-01 01:01|0|0|0|0|0|0|0|0|0|0|0|0|0\n",
-            "3|4|0|0|0|0|2014-01-01 01:02|2014-01-01 01:02|0|0|0|0|0|0|0|0|0|0|0|0|0\n"
+            "1|2|0|0|0|0|2014-01-01 01:01|2014-01-01 01:01|0|0|0|0|0|0|0|0|0|0|0|0|0|1|0|0|0|0|0|0|0|0\n",
+            "3|4|0|0|0|0|2014-01-01 01:02|2014-01-01 01:02|0|0|0|0|0|0|0|0|0|0|0|0|0|1|0|0|0|0|0|0|0|0\n",
+            "4|womp|0|0|0|0|2014-01-01 01:03|2014-01-01 01:03|0|0|0|0|0|0|0|0|0|0|0|0|0|4|1|1|1|abc|1|1|1|2\n"
     );
 
+
+    private static final int NUM_DATA = DATA_LIST.size();
 
     private class DummyFirehose implements AmazonKinesisFirehose {
 
@@ -126,11 +141,12 @@ public class DeviceDataDAOFirehoseTest{
         final DeviceDataDAOFirehose dao = new DeviceDataDAOFirehose(streamName, firehose);
         final int result = dao.batchInsertAll(DATA_LIST);
 
-        assertThat(result, is(2));
+        assertThat(result, is(NUM_DATA));
         assertThat(request.getDeliveryStreamName(), is(streamName));
-        assertThat(request.getRecords().size(), is(2));
+        assertThat(request.getRecords().size(), is(NUM_DATA));
         assertThat(new String(request.getRecords().get(0).getData().array()), is(EXPECTED_RESULTS.get(0)));
         assertThat(new String(request.getRecords().get(1).getData().array()), is(EXPECTED_RESULTS.get(1)));
+        assertThat(new String(request.getRecords().get(2).getData().array()), is(EXPECTED_RESULTS.get(2)));
     }
 
     @Test
@@ -157,11 +173,13 @@ public class DeviceDataDAOFirehoseTest{
         final DeviceDataDAOFirehose dao = new DeviceDataDAOFirehose(streamName, firehose);
         final int result = dao.batchInsertAll(DATA_LIST);
 
-        assertThat(result, is(2));
+        assertThat(result, is(NUM_DATA));
         assertThat(request.getDeliveryStreamName(), is(streamName));
-        assertThat(request.getRecords().size(), is(2));
+        assertThat(request.getRecords().size(), is(NUM_DATA));
         assertThat(new String(request.getRecords().get(0).getData().array()), is(EXPECTED_RESULTS.get(0)));
         assertThat(new String(request.getRecords().get(1).getData().array()), is(EXPECTED_RESULTS.get(1)));
+        final String lastRecord = new String(request.getRecords().get(2).getData().array());
+        assertThat(new String(request.getRecords().get(2).getData().array()), is(EXPECTED_RESULTS.get(2)));
     }
 
     @Test
@@ -182,12 +200,13 @@ public class DeviceDataDAOFirehoseTest{
 
     @Test
     public void testBatchInsertWithSomeFailedRecords() {
+        final int numFail = 1;
         final String streamName = "test_stream";
         final AmazonKinesisFirehose firehose = new DummyFirehose() {
             @Override
             public PutRecordBatchResult putRecordBatch(final PutRecordBatchRequest putRecordBatchRequest) {
                 return new PutRecordBatchResult()
-                        .withFailedPutCount(1)
+                        .withFailedPutCount(numFail)
                         .withRequestResponses(
                                 new PutRecordBatchResponseEntry().withErrorCode("An error! Failed again!"),
                                 new PutRecordBatchResponseEntry().withRecordId("Aha, finally you win. Kinda."));
@@ -197,7 +216,7 @@ public class DeviceDataDAOFirehoseTest{
         final DeviceDataDAOFirehose dao = new DeviceDataDAOFirehose(streamName, firehose);
         final int result = dao.batchInsertAll(DATA_LIST);
 
-        assertThat(result, is(1));
+        assertThat(result, is(NUM_DATA - numFail));
     }
 
     @Test
