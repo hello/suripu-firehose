@@ -84,18 +84,17 @@ public class DeviceDataDAOFirehose extends FirehoseDAO implements DeviceDataInge
     )
     DISTKEY (account_id)
     SORTKEY (account_id, local_utc_ts);
-    ALTER TABLE dev_sense_data ADD COLUMN hw_version INTEGER DEFAULT 1;
-    ALTER TABLE dev_sense_data ADD COLUMN pressure INTEGER DEFAULT 0;
-    ALTER TABLE dev_sense_data ADD COLUMN tvoc INTEGER DEFAULT 0;
-    ALTER TABLE dev_sense_data ADD COLUMN co2 INTEGER DEFAULT 0;
-    ALTER TABLE dev_sense_data ADD COLUMN rgb VARCHAR(64) DEFAULT '0';
-    ALTER TABLE dev_sense_data ADD COLUMN ir INTEGER DEFAULT 0;
-    ALTER TABLE dev_sense_data ADD COLUMN clear INTEGER DEFAULT 0;
-    ALTER TABLE dev_sense_data ADD COLUMN lux_count INTEGER DEFAULT 0;
-    ALTER TABLE dev_sense_data ADD COLUMN uv_count INTEGER DEFAULT 0;
-
-
+    ALTER TABLE <tableName> ADD COLUMN hw_version INTEGER DEFAULT 1;
+    ALTER TABLE <tableName> ADD COLUMN pressure INTEGER;
+    ALTER TABLE <tableName> ADD COLUMN tvoc INTEGER;
+    ALTER TABLE <tableName> ADD COLUMN co2 INTEGER;
+    ALTER TABLE <tableName> ADD COLUMN rgb VARCHAR(64);
+    ALTER TABLE <tableName> ADD COLUMN ir INTEGER;
+    ALTER TABLE <tableName> ADD COLUMN clear INTEGER;
+    ALTER TABLE <tableName> ADD COLUMN lux_count INTEGER;
+    ALTER TABLE <tableName> ADD COLUMN uv_count INTEGER;
      */
+
     private static Record toRecord(final DeviceData model) {
         final List<String> recordParameters = Lists.newArrayList();
         recordParameters.add(model.accountId.toString());
