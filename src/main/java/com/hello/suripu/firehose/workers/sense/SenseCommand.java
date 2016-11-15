@@ -17,7 +17,7 @@ import com.hello.suripu.core.configuration.DynamoDBTableName;
 import com.hello.suripu.core.configuration.QueueName;
 import com.hello.suripu.core.db.FeatureStore;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
-import com.hello.suripu.coredw8.clients.AmazonDynamoDBClientFactory;
+import com.hello.suripu.coredropwizard.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.firehose.framework.ConfigurationUtil;
 import com.hello.suripu.firehose.framework.WorkerConfiguration;
 import io.dropwizard.cli.ConfiguredCommand;
@@ -56,8 +56,8 @@ public class SenseCommand extends ConfiguredCommand<WorkerConfiguration> {
                 bootstrap.getValidatorFactory().getValidator(),
                 bootstrap.getMetricRegistry(),
                 bootstrap.getClassLoader());
-        configuration.getMetricsFactory().configure(environment.lifecycle(),
-                bootstrap.getMetricRegistry());
+
+        configuration.getMetricsFactory().configure(environment.lifecycle(), bootstrap.getMetricRegistry());
         bootstrap.run(configuration, environment);
 
         if(configuration.getMetricsEnabled()) {

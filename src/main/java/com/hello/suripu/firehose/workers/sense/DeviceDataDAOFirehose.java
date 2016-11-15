@@ -1,26 +1,16 @@
 package com.hello.suripu.firehose.workers.sense;
 
 import com.amazonaws.services.kinesisfirehose.AmazonKinesisFirehose;
-import com.amazonaws.services.kinesisfirehose.model.DeliveryStreamDescription;
-import com.amazonaws.services.kinesisfirehose.model.DescribeDeliveryStreamRequest;
-import com.amazonaws.services.kinesisfirehose.model.PutRecordBatchResponseEntry;
-import com.amazonaws.services.kinesisfirehose.model.PutRecordBatchResult;
 import com.amazonaws.services.kinesisfirehose.model.Record;
-import com.amazonaws.services.kinesisfirehose.model.ServiceUnavailableException;
-import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.hello.suripu.core.db.DeviceDataIngestDAO;
+import com.hello.suripu.core.firmware.HardwareVersion;
 import com.hello.suripu.core.models.DeviceData;
-
-import com.amazonaws.services.kinesisfirehose.model.PutRecordBatchRequest;
 import com.hello.suripu.firehose.FirehoseDAO;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.nio.ByteBuffer;
 import java.util.List;
 
 /**
@@ -94,30 +84,63 @@ public class DeviceDataDAOFirehose extends FirehoseDAO implements DeviceDataInge
     )
     DISTKEY (account_id)
     SORTKEY (account_id, local_utc_ts);
+    ALTER TABLE <tableName> ADD COLUMN hw_version INTEGER DEFAULT 1;
+    ALTER TABLE <tableName> ADD COLUMN pressure INTEGER;
+    ALTER TABLE <tableName> ADD COLUMN tvoc INTEGER;
+    ALTER TABLE <tableName> ADD COLUMN co2 INTEGER;
+    ALTER TABLE <tableName> ADD COLUMN rgb VARCHAR(64);
+    ALTER TABLE <tableName> ADD COLUMN ir INTEGER;
+    ALTER TABLE <tableName> ADD COLUMN clear INTEGER;
+    ALTER TABLE <tableName> ADD COLUMN lux_count INTEGER;
+    ALTER TABLE <tableName> ADD COLUMN uv_count INTEGER;
      */
+
     private static Record toRecord(final DeviceData model) {
-        return toPipeDelimitedRecord(
-                model.accountId.toString(),
-                model.externalDeviceId,
-                toString(model.ambientTemperature),
-                toString(model.ambientLight),
-                toString(model.ambientHumidity),
-                toString(model.ambientAirQuality),
-                toString(model.dateTimeUTC),
-                toString(model.localTime()),
-                toString(model.offsetMillis),
-                toString(model.ambientLightVariance),
-                toString(model.ambientLightPeakiness),
-                toString(model.ambientAirQualityRaw),
-                toString(model.ambientDustVariance),
-                toString(model.ambientDustMin),
-                toString(model.ambientDustMax),
-                toString(model.firmwareVersion),
-                toString(model.waveCount),
-                toString(model.holdCount),
-                toString(model.audioNumDisturbances),
-                toString(model.audioPeakDisturbancesDB),
-                toString(model.audioPeakBackgroundDB)
-        );
+        final List<String> recordParameters = Lists.newArrayList();
+        recordParameters.add(model.accountId.toString());
+        recordParameters.add(model.externalDeviceId);
+        recordParameters.add(toString(model.ambientTemperature));
+        recordParameters.add(toString(model.ambientLight));
+        recordParameters.add(toString(model.ambientHumidity));
+        recordParameters.add(toString(model.ambientAirQuality));
+        recordParameters.add(toString(model.dateTimeUTC));
+        recordParameters.add(toString(model.localTime()));
+        recordParameters.add(toString(model.offsetMillis));
+        recordParameters.add(toString(model.ambientLightVariance));
+        recordParameters.add(toString(model.ambientLightPeakiness));
+        recordParameters.add(toString(model.ambientAirQualityRaw));
+        recordParameters.add(toString(model.ambientDustVariance));
+        recordParameters.add(toString(model.ambientDustMin));
+        recordParameters.add(toString(model.ambientDustMax));
+        recordParameters.add(toString(model.firmwareVersion));
+        recordParameters.add(toString(model.waveCount));
+        recordParameters.add(toString(model.holdCount));
+        recordParameters.add(toString(model.audioNumDisturbances));
+        recordParameters.add(toString(model.audioPeakDisturbancesDB));
+        recordParameters.add(toString(model.audioPeakBackgroundDB));
+
+        if (model.hasExtra()) {
+            // sense 1.5
+            recordParameters.add(toString(model.hardwareVersion().value));
+            recordParameters.add(toString(model.extra().pressure()));
+            recordParameters.add(toString(model.extra().tvoc()));
+            recordParameters.add(toString(model.extra().co2()));
+            recordParameters.add(model.extra().rgb());
+            recordParameters.add(toString(model.extra().ir()));
+            recordParameters.add(toString(model.extra().clear()));
+            recordParameters.add(toString(model.extra().luxCount()));
+            recordParameters.add(toString(model.extra().uvCount()));
+        } else {
+            recordParameters.add(toString(HardwareVersion.SENSE_ONE.value));
+            recordParameters.add("0");
+            recordParameters.add("0");
+            recordParameters.add("0");
+            recordParameters.add("0");
+            recordParameters.add("0");
+            recordParameters.add("0");
+            recordParameters.add("0");
+            recordParameters.add("0");
+        }
+        return toPipeDelimitedRecord(recordParameters);
     }
 }

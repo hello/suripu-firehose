@@ -19,7 +19,7 @@ import com.hello.suripu.core.db.KeyStore;
 import com.hello.suripu.core.db.KeyStoreDynamoDB;
 import com.hello.suripu.core.db.MergedUserInfoDynamoDB;
 import com.hello.suripu.core.db.util.JodaArgumentFactory;
-import com.hello.suripu.coredw8.clients.AmazonDynamoDBClientFactory;
+import com.hello.suripu.coredropwizard.clients.AmazonDynamoDBClientFactory;
 import com.hello.suripu.firehose.framework.ConfigurationUtil;
 import com.hello.suripu.firehose.framework.FirehoseEnvironmentCommand;
 import io.dropwizard.jdbi.DBIFactory;
