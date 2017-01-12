@@ -75,10 +75,18 @@ public class PillDataDAOFirehose extends FirehoseDAO {
         ) DISTSTYLE KEY DISTKEY (account_id)
         COMPOUND SORTKEY (local_utc_ts, account_id);
 
+        -- 2017-01-11 Add two new columns
+        ALTER TABLE dev_pill_data ADD COLUMN motion_mask BIGINT DEFAULT 0;
+        ALTER TABLE dev_pill_data ADD COLUMN cost_theta BIGINT DEFAULT 0;
      */
     private static Record toRecord(final TrackerMotion model) {
         final DateTime utcTime = new DateTime(model.timestamp, DateTimeZone.UTC).withMillisOfSecond(0);
         final DateTime localUTCDateTIme = utcTime.plusMillis(model.offsetMillis);
+
+        // note, motionMask should be non-zero for pill 1.5, use this to determine if we can use cosTheta
+        final Long motionMask = (model.motionMask.isPresent()) ? model.motionMask.get() : 0L;
+        final Long cosTheta = (model.cosTheta.isPresent()) ? model.cosTheta.get() : 0L;
+
         return toPipeDelimitedRecord(
                 toString(model.accountId),
                 model.externalTrackerId,
@@ -88,7 +96,9 @@ public class PillDataDAOFirehose extends FirehoseDAO {
                 toString(localUTCDateTIme),
                 toString(model.motionRange),
                 toString(model.kickOffCounts),
-                toString(model.onDurationInSeconds)
+                toString(model.onDurationInSeconds),
+                toString(motionMask),
+                toString(cosTheta)
         );
     }
 }
