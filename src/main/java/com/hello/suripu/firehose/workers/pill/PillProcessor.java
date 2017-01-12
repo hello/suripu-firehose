@@ -151,7 +151,7 @@ public class PillProcessor implements IRecordProcessor {
                         final Optional<UserInfo> userInfoOptional = mergedUserInfoDynamoDB.getInfo(senseId, pair.get().accountId);
                         userInfos.put(pillId, userInfoOptional);
                     } else {
-                        userInfos.put(pillId, Optional.<UserInfo>absent());
+                        userInfos.put(pillId, Optional.absent());
                     }
                 }
 
