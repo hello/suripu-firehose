@@ -11,14 +11,16 @@ import com.hello.suripu.firehose.FirehoseDAO;
 public class MessejiRequestLogProcessorFactory implements IRecordProcessorFactory {
     private final FirehoseDAO firehoseDAO;
     private final MetricRegistry metrics;
+    private final Integer maxRecords;
 
-    public MessejiRequestLogProcessorFactory(final FirehoseDAO firehoseDAO, final MetricRegistry metrics) {
+    public MessejiRequestLogProcessorFactory(final FirehoseDAO firehoseDAO, final Integer maxRecords, final MetricRegistry metrics) {
         this.firehoseDAO = firehoseDAO;
         this.metrics = metrics;
+        this.maxRecords = maxRecords;
     }
 
     @Override
     public IRecordProcessor createProcessor() {
-        return MessejiRequestLogProcessor.create(firehoseDAO, metrics);
+        return MessejiRequestLogProcessor.create(firehoseDAO, maxRecords, metrics);
     }
 }

@@ -65,25 +65,27 @@ logging:
 
   # Logger-specific levels.
   loggers:
-
     # Sets the level for 'com.example.app' to DEBUG.
     com.hello.suripu.firehose: DEBUG
   # Settings for logging to a file.
   appenders:
-        - type: file
-          threshold: DEBUG
-          currentLogFilename: /var/log/suripu-firehose/suripu-firehose-pill.log
-          archivedLogFilenamePattern: /var/log/suripu-firehose/suripu-firehose-pill-%d{yyyy-MM-dd}.log.gz
-          archivedFileCount: 7
-          timeZone: UTC
+    - type: file
+      threshold: INFO
+      currentLogFilename: /var/log/suripu-firehose/suripu-firehose-pill.log
+      archivedLogFilenamePattern: /var/log/suripu-firehose/suripu-firehose-pill-%d{yyyy-MM-dd}.log.gz
+      archivedFileCount: 7
+      timeZone: UTC
+    - type: papertrail
+      threshold: INFO
+      host: logs2.papertrailapp.com
+      port: 11366
+      ident: firehose-pill-prod
 
 dynamodb:
   region: us-east-1
+  default_endpoint: http://dynamodb.us-east-1.amazonaws.com
   tables:
     alarm_info: prod_alarm_info
     features: features
     pill_key_store : pill_key_store
-  endpoints:
-    alarm_info: http://dynamodb.us-east-1.amazonaws.com
-    features : http://dynamodb.us-east-1.amazonaws.com
-    pill_key_store : http://dynamodb.us-east-1.amazonaws.com
+  endpoints: {}

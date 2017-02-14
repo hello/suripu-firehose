@@ -60,7 +60,7 @@ public class MessejiCommand extends ConfiguredCommand<WorkerConfiguration> {
 
         LOGGER.info("Using firehose stream: {}", firehoseDAO.describeStream().toString());
 
-        final IRecordProcessorFactory factory = new MessejiRequestLogProcessorFactory(firehoseDAO, environment.metrics());
+        final IRecordProcessorFactory factory = new MessejiRequestLogProcessorFactory(firehoseDAO, configuration.getMaxRecords(), environment.metrics());
 
         final Worker worker = new Worker(factory, kinesisClientLibConfiguration);
         worker.run();

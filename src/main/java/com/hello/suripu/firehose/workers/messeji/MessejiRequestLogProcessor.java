@@ -30,23 +30,25 @@ public class MessejiRequestLogProcessor implements IRecordProcessor {
     private final FirehoseDAO firehoseDAO;
     private String shardId = "";
 
+    private Integer maxRecords;
     private final Meter recordsProcessed;
     private final Meter batchSaved;
     private final Meter batchSaveFailures;
 
-    protected MessejiRequestLogProcessor(final FirehoseDAO firehoseDAO, final Meter recordsProcessed,
+    protected MessejiRequestLogProcessor(final FirehoseDAO firehoseDAO, final Integer maxRecords, final Meter recordsProcessed,
                                          final Meter batchSaved, final Meter batchSaveFailures) {
         this.firehoseDAO = firehoseDAO;
+        this.maxRecords = maxRecords;
         this.recordsProcessed = recordsProcessed;
         this.batchSaved = batchSaved;
         this.batchSaveFailures = batchSaveFailures;
     }
 
-    public static MessejiRequestLogProcessor create(final FirehoseDAO firehoseDAO, final MetricRegistry metricRegistry) {
+    public static MessejiRequestLogProcessor create(final FirehoseDAO firehoseDAO, final Integer maxRecords, final MetricRegistry metricRegistry) {
         final Meter recordsProcessed = metricRegistry.meter(MetricRegistry.name(MessejiRequestLogProcessor.class, "records", "records-processed"));
         final Meter batchSaved = metricRegistry.meter(MetricRegistry.name(MessejiRequestLogProcessor.class, "records", "batch-saved"));
         final Meter batchSaveFailures = metricRegistry.meter(MetricRegistry.name(MessejiRequestLogProcessor.class, "records", "batch-save-failures"));
-        return new MessejiRequestLogProcessor(firehoseDAO, recordsProcessed, batchSaved, batchSaveFailures);
+        return new MessejiRequestLogProcessor(firehoseDAO, maxRecords, recordsProcessed, batchSaved, batchSaveFailures);
     }
 
     @Override
@@ -105,6 +107,9 @@ public class MessejiRequestLogProcessor implements IRecordProcessor {
             checkpoint(checkpointer, lastSequenceNumber);
             LOGGER.error("error=Exception exception={}", e);
         }
+
+        final int batchCapacity = Math.round(records.size() / (float) maxRecords * 100.0f);
+        LOGGER.info("shard={} batch_capacity={}%", shardId, batchCapacity);
     }
 
     @Override

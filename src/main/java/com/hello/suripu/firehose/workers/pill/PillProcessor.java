@@ -40,6 +40,7 @@ public class PillProcessor implements IRecordProcessor {
     private final MergedUserInfoDynamoDB mergedUserInfoDynamoDB;
     private final KeyStore pillKeyStore;
     private final DeviceDAO deviceDAO;
+    private final Integer maxRecords;
 
     private final PillDataDAOFirehose firehoseDAO;
     private String shardId = "";
@@ -51,12 +52,15 @@ public class PillProcessor implements IRecordProcessor {
     protected PillProcessor(final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                             final KeyStore pillKeyStore,
                             final DeviceDAO deviceDAO,
-                            final PillDataDAOFirehose firehoseDAO, final Meter recordsProcessed,
+                            final PillDataDAOFirehose firehoseDAO,
+                            final Integer maxRecords,
+                            final Meter recordsProcessed,
                             final Meter batchSaved, final Meter batchSaveFailures) {
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.pillKeyStore = pillKeyStore;
         this.deviceDAO = deviceDAO;
         this.firehoseDAO = firehoseDAO;
+        this.maxRecords = maxRecords;
         this.recordsProcessed = recordsProcessed;
         this.batchSaved = batchSaved;
         this.batchSaveFailures = batchSaveFailures;
@@ -66,11 +70,12 @@ public class PillProcessor implements IRecordProcessor {
                                        final KeyStore pillKeyStore,
                                        final DeviceDAO deviceDAO,
                                        final PillDataDAOFirehose firehoseDAO,
+                                       final Integer maxRecords,
                                        final MetricRegistry metricRegistry) {
         final Meter recordsProcessed = metricRegistry.meter(MetricRegistry.name(PillProcessor.class, "records", "records-processed"));
         final Meter batchSaved = metricRegistry.meter(MetricRegistry.name(PillProcessor.class, "records", "batch-saved"));
         final Meter batchSaveFailures = metricRegistry.meter(MetricRegistry.name(PillProcessor.class, "records", "batch-save-failures"));
-        return new PillProcessor(mergedUserInfoDynamoDB, pillKeyStore, deviceDAO, firehoseDAO, recordsProcessed, batchSaved, batchSaveFailures);
+        return new PillProcessor(mergedUserInfoDynamoDB, pillKeyStore, deviceDAO, firehoseDAO, maxRecords, recordsProcessed, batchSaved, batchSaveFailures);
     }
 
     @Override
@@ -103,6 +108,8 @@ public class PillProcessor implements IRecordProcessor {
         final Map<String, Optional<DeviceAccountPair>> pairs = Maps.newHashMap();
         final Map<String, Optional<UserInfo>> userInfos = Maps.newHashMap();
         final Map<String, String> pillIdToSenseId = Maps.newHashMap();
+
+        LOGGER.debug("get_records={}", records.size());
 
         for (final Record record : records) {
             try {
@@ -226,6 +233,9 @@ public class PillProcessor implements IRecordProcessor {
             checkpoint(checkpointer, lastSequenceNumber);
             LOGGER.error("error=Exception exception={}", e);
         }
+
+        final int batchCapacity = Math.round(records.size() / (float) maxRecords * 100.0f);
+        LOGGER.info("shard={} batch_capacity={}%", shardId, batchCapacity);
     }
 
     @Override

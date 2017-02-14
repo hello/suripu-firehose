@@ -75,7 +75,7 @@ public class PillCommand extends FirehoseEnvironmentCommand<PillFirehoseConfigur
 
         LOGGER.info("Using firehose stream: {}", firehoseDAO.describeStream().toString());
 
-        final IRecordProcessorFactory factory = new PillProcessorFactory(mergedUserInfoDynamoDB, pillKeyStore, deviceDAO, firehoseDAO, environment.metrics());
+        final IRecordProcessorFactory factory = new PillProcessorFactory(mergedUserInfoDynamoDB, pillKeyStore, deviceDAO, firehoseDAO, configuration.getMaxRecords(), environment.metrics());
 
         // consume kinesis
         final KinesisClientLibConfiguration kinesisClientLibConfiguration = ConfigurationUtil.getKclConfig(configuration, awsCredentialsProvider, QueueName.BATCH_PILL_DATA);
