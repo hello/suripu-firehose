@@ -44,4 +44,4 @@ logging:
       threshold: INFO
       host: logs2.papertrailapp.com
       port: 11366
-      ident: firehose-messiji-prod
+      ident: firehose-messeji-prod
