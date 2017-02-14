@@ -34,9 +34,14 @@ logging:
     com.hello.suripu.firehose.workers.messeji: INFO
   # Settings for logging to a file.
   appenders:
-        - type: file
-          threshold: DEBUG
-          currentLogFilename: /var/log/suripu-firehose-messeji/suripu-firehose-messeji.log
-          archivedLogFilenamePattern: /var/log/suripu-firehose-messeji/suripu-firehose-messeji-%d{yyyy-MM-dd}.log.gz
-          archivedFileCount: 7
-          timeZone: UTC
+    - type: file
+      threshold: DEBUG
+      currentLogFilename: /var/log/suripu-firehose-messeji/suripu-firehose-messeji.log
+      archivedLogFilenamePattern: /var/log/suripu-firehose-messeji/suripu-firehose-messeji-%d{yyyy-MM-dd}.log.gz
+      archivedFileCount: 7
+      timeZone: UTC
+    - type: papertrail
+      threshold: INFO
+      host: logs2.papertrailapp.com
+      port: 11366
+      ident: firehose-messiji-prod

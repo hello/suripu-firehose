@@ -16,21 +16,24 @@ public class PillProcessorFactory implements IRecordProcessorFactory {
     private final DeviceDAO deviceDAO;
     private final PillDataDAOFirehose firehoseDAO;
     private final MetricRegistry metrics;
+    private final Integer maxRecords;
 
     public PillProcessorFactory(final MergedUserInfoDynamoDB mergedUserInfoDynamoDB,
                                 final KeyStore pillKeyStore,
                                 final DeviceDAO deviceDAO,
                                 final PillDataDAOFirehose firehoseDAO,
+                                final Integer maxRecords,
                                 final MetricRegistry metrics) {
         this.mergedUserInfoDynamoDB = mergedUserInfoDynamoDB;
         this.pillKeyStore = pillKeyStore;
         this.deviceDAO = deviceDAO;
         this.firehoseDAO = firehoseDAO;
+        this.maxRecords = maxRecords;
         this.metrics = metrics;
     }
 
     @Override
     public IRecordProcessor createProcessor() {
-        return PillProcessor.create(mergedUserInfoDynamoDB, pillKeyStore, deviceDAO, firehoseDAO, metrics);
+        return PillProcessor.create(mergedUserInfoDynamoDB, pillKeyStore, deviceDAO, firehoseDAO, maxRecords, metrics);
     }
 }
